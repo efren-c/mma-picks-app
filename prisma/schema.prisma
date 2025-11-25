@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed
+  username  String   @unique
+  points    Int      @default(0)
+  picks     Pick[]
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  name      String   // e.g. "UFC 300"
+  date      DateTime
+  image     String?  // URL to event poster
+  fights    Fight[]
+}
+
+model Fight {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  fighterA  String
+  fighterB  String
+  order     Int      // Fight order on card
+  winner    String?  // 'A' or 'B' (null if not happened)
+  method    String?  // 'KO', 'SUB', 'DEC'
+  round     Int?     // 1, 2, 3, 4, 5
+  picks     Pick[]
+}
+
+model Pick {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  fightId   String
+  fight     Fight    @relation(fields: [fightId], references: [id])
+  winner    String   // 'A' or 'B'
+  method    String   // 'KO', 'SUB', 'DEC'
+  round     Int
+  points    Int?     // Awarded points after fight concludes
+}
