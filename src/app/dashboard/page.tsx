@@ -2,7 +2,8 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trophy, History } from "lucide-react"
+import { Trophy, History, Check, X } from "lucide-react"
+import { DashboardEventCard } from "@/components/DashboardEventCard"
 
 export default async function DashboardPage() {
     const session = await auth()
@@ -23,11 +24,7 @@ export default async function DashboardPage() {
                     }
                 },
                 orderBy: {
-                    fight: {
-                        event: {
-                            date: 'desc'
-                        }
-                    }
+                    updatedAt: 'desc'
                 }
             }
         }
@@ -36,6 +33,25 @@ export default async function DashboardPage() {
     if (!user) {
         return <div>User not found</div>
     }
+
+    // Group picks by event
+    const picksByEvent = user.picks.reduce((acc, pick) => {
+        const eventId = pick.fight.event.id
+        if (!acc[eventId]) {
+            acc[eventId] = {
+                event: pick.fight.event,
+                picks: [],
+                totalPoints: 0
+            }
+        }
+        acc[eventId].picks.push(pick)
+        acc[eventId].totalPoints += pick.points || 0
+        return acc
+    }, {} as Record<string, { event: any; picks: any[]; totalPoints: number }>)
+
+    const events = Object.values(picksByEvent).sort((a, b) =>
+        new Date(b.event.date).getTime() - new Date(a.event.date).getTime()
+    )
 
     return (
         <main className="min-h-screen bg-slate-950 p-8">
@@ -62,42 +78,32 @@ export default async function DashboardPage() {
                             <div className="text-2xl font-bold text-white">{user.picks.length}</div>
                         </CardContent>
                     </Card>
+                    <Card className="bg-slate-900/50 border-slate-800">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium text-slate-400">Events</CardTitle>
+                            <Trophy className="h-4 w-4 text-red-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-white">{events.length}</div>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                {/* Pick History */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold text-white">Pick History</h2>
-                    <div className="space-y-4">
-                        {user.picks.length === 0 ? (
-                            <div className="text-slate-500">No picks made yet.</div>
-                        ) : (
-                            user.picks.map((pick) => (
-                                <Card key={pick.id} className="bg-slate-900/30 border-slate-800">
-                                    <div className="p-4 flex items-center justify-between">
-                                        <div>
-                                            <div className="text-white font-medium">
-                                                {pick.fight.fighterA} vs {pick.fight.fighterB}
-                                            </div>
-                                            <div className="text-sm text-slate-400">
-                                                {pick.fight.event.name} • {new Date(pick.fight.event.date).toLocaleDateString()}
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-sm text-slate-300">
-                                                Pick: <span className="font-semibold text-red-500">{pick.winner}</span> via {pick.method}
-                                                {pick.method !== 'Decision' && ` (R${pick.round})`}
-                                            </div>
-                                            {pick.points !== null && (
-                                                <div className="text-sm font-bold text-green-500">
-                                                    +{pick.points} pts
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </Card>
-                            ))
-                        )}
-                    </div>
+                {/* Events with Picks */}
+                <div className="space-y-6">
+                    <h2 className="text-xl font-semibold text-white">Pick History by Event</h2>
+                    {events.length === 0 ? (
+                        <div className="text-slate-500">No picks made yet.</div>
+                    ) : (
+                        events.map(({ event, picks, totalPoints }) => (
+                            <DashboardEventCard
+                                key={event.id}
+                                event={event}
+                                picks={picks}
+                                totalPoints={totalPoints}
+                            />
+                        ))
+                    )}
                 </div>
             </div>
         </main>

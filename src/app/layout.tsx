@@ -9,6 +9,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "MMA Picks",
   description: "Predict fight outcomes and compete.",
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({

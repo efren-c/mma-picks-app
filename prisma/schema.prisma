@@ -12,7 +12,10 @@ model User {
   email     String   @unique
   password  String   // Hashed
   username  String   @unique
+  role      String   @default("USER") // "USER" or "ADMIN"
   points    Int      @default(0)
+  resetToken String? @unique
+  resetTokenExpiry DateTime?
   picks     Pick[]
 }
 
@@ -34,6 +37,7 @@ model Fight {
   winner    String?  // 'A' or 'B' (null if not happened)
   method    String?  // 'KO', 'SUB', 'DEC'
   round     Int?     // 1, 2, 3, 4, 5
+  scheduledRounds Int @default(3) // 3 or 5
   picks     Pick[]
 }
 
@@ -47,4 +51,6 @@ model Pick {
   method    String   // 'KO', 'SUB', 'DEC'
   round     Int
   points    Int?     // Awarded points after fight concludes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

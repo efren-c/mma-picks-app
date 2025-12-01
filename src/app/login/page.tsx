@@ -1,13 +1,22 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useEffect } from "react"
 import { authenticate } from "@/app/lib/actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
-    const [errorMessage, dispatch] = useActionState(authenticate, undefined)
+    const [state, dispatch] = useActionState(authenticate, undefined)
+    const router = useRouter()
+
+    useEffect(() => {
+        if (state?.success) {
+            router.push('/')
+            router.refresh()
+        }
+    }, [state, router])
 
     return (
         <main className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
@@ -36,8 +45,13 @@ export default function LoginPage() {
                                 className="w-full p-2 rounded-md bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-red-600"
                             />
                         </div>
-                        {errorMessage && (
-                            <div className="text-red-500 text-sm">{errorMessage}</div>
+                        <div className="flex items-center justify-end">
+                            <Link href="/forgot-password" className="text-sm text-red-500 hover:text-red-400 cursor-pointer">
+                                Forgot password?
+                            </Link>
+                        </div>
+                        {state?.error && (
+                            <div className="text-red-500 text-sm">{state.error}</div>
                         )}
                         <Button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white">
                             Log In
@@ -45,7 +59,7 @@ export default function LoginPage() {
                     </form>
                     <div className="mt-4 text-center text-sm text-slate-400">
                         Don't have an account?{" "}
-                        <Link href="/register" className="text-red-500 hover:underline">
+                        <Link href="/register" className="text-red-500 hover:underline cursor-pointer">
                             Sign up
                         </Link>
                     </div>

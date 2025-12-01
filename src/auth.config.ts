@@ -5,6 +5,20 @@ export const authConfig = {
         signIn: '/login',
     },
     callbacks: {
+        async jwt({ token, user }) {
+            // Add username to the token when user signs in
+            if (user) {
+                token.username = user.username
+            }
+            return token
+        },
+        async session({ session, token }) {
+            // Add username to the session from the token
+            if (session.user) {
+                session.user.username = token.username as string
+            }
+            return session
+        },
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
             const isOnDashboard = nextUrl.pathname.startsWith('/dashboard'); // Example protected route

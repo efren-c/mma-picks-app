@@ -1,51 +1,66 @@
 'use server'
 
-import { signIn } from "@/auth"
-import { AuthError } from "next-auth"
-import { prisma } from "@/lib/prisma"
-import bcrypt from "bcryptjs"
-import { redirect } from "next/navigation"
+import { signIn } from '@/auth'
+import { AuthError } from 'next-auth'
+import { z } from 'zod'
+import bcrypt from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
+import { redirect } from 'next/navigation'
 
 export async function authenticate(
-    prevState: string | undefined,
-    formData: FormData,
+    prevState: { error?: string; success?: boolean } | undefined,
+    formData: FormData
 ) {
     try {
-        await signIn('credentials', formData)
+        await signIn('credentials', {
+            ...Object.fromEntries(formData),
+            redirect: false,
+        })
+        return { success: true }
     } catch (error) {
         if (error instanceof AuthError) {
             switch (error.type) {
                 case 'CredentialsSignin':
-                    return 'Invalid credentials.'
+                    return { error: 'Invalid credentials.' }
                 default:
-                    return 'Something went wrong.'
+                    return { error: 'Something went wrong.' }
             }
         }
         throw error
     }
 }
 
-export async function register(prevState: any, formData: FormData) {
-    const username = formData.get("username") as string
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
+const RegisterSchema = z.object({
+    username: z.string().min(3, 'Username must be at least 3 characters'),
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+})
 
-    if (!username || !email || !password) {
-        return { message: "Missing fields" }
+export async function register(
+    prevState: { message: string } | undefined,
+    formData: FormData
+) {
+    const validatedFields = RegisterSchema.safeParse(
+        Object.fromEntries(formData.entries())
+    )
+
+    if (!validatedFields.success) {
+        return {
+            message: validatedFields.error.flatten().fieldErrors.password?.[0] || 'Invalid fields',
+        }
     }
+
+    const { username, email, password } = validatedFields.data
 
     try {
         const existingUser = await prisma.user.findFirst({
             where: {
-                OR: [
-                    { email },
-                    { username }
-                ]
-            }
+                OR: [{ email }, { username }],
+            },
         })
 
         if (existingUser) {
-            return { message: "User already exists" }
+            return { message: 'User already exists' }
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
@@ -54,14 +69,20 @@ export async function register(prevState: any, formData: FormData) {
             data: {
                 username,
                 email,
-                password: hashedPassword
-            }
+                password: hashedPassword,
+            },
         })
 
+        // Automatically sign in the newly created user
+        await signIn('credentials', {
+            email,
+            password,
+            redirect: false,
+        })
     } catch (error) {
-        console.error("Registration error:", error)
-        return { message: "Failed to create account" }
+        return { message: 'Database Error: Failed to Create User.' }
     }
 
-    redirect('/login')
+    // Redirect to home page after successful registration and login
+    redirect('/')
 }

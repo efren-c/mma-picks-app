@@ -20,6 +20,21 @@ export async function submitPick(fightId: string, winner: string, method: string
     }
 
     try {
+        // Get fight and event details to check start time
+        const fight = await prisma.fight.findUnique({
+            where: { id: fightId },
+            include: { event: true }
+        })
+
+        if (!fight) {
+            return { error: "Fight not found" }
+        }
+
+        // Check if event has started
+        if (new Date() > new Date(fight.event.date)) {
+            return { error: "Event has already started. Picks are locked." }
+        }
+
         // Check if pick already exists
         const existingPick = await prisma.pick.findFirst({
             where: {
