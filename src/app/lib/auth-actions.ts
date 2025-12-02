@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
+import { sendPasswordResetEmail } from '@/lib/email'
 
 export async function requestPasswordReset(
     prevState: { message?: string } | undefined,
@@ -36,12 +37,17 @@ export async function requestPasswordReset(
         },
     })
 
-    // Log link to console for now
-    const resetLink = `http://localhost:3000/reset-password/${token}`
-    console.log('----------------------------------------')
-    console.log('PASSWORD RESET LINK:')
-    console.log(resetLink)
-    console.log('----------------------------------------')
+    // Send email via Resend
+    const emailResult = await sendPasswordResetEmail({
+        to: user.email,
+        resetToken: token,
+        username: user.username,
+    })
+
+    if (!emailResult.success) {
+        console.error('Failed to send password reset email:', emailResult.error)
+        // Still return success message for security (don't reveal email exists)
+    }
 
     return { message: 'If an account exists with this email, you will receive a password reset link.' }
 }

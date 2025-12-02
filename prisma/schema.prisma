@@ -3,9 +3,15 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Used for migrations on Vercel
 }
+
+// ℹ️ For local development with SQLite:
+// 1. Change provider to "sqlite"  
+// 2. Remove directUrl line
+// 3. Set DATABASE_URL="file:./dev.db" in .env
 
 model User {
   id        String   @id @default(cuid())
@@ -17,6 +23,7 @@ model User {
   resetToken String? @unique
   resetTokenExpiry DateTime?
   picks     Pick[]
+  badges    UserBadge[]
 }
 
 model Event {
@@ -53,4 +60,23 @@ model Pick {
   points    Int?     // Awarded points after fight concludes
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String
+  icon        String      // Lucide icon name or image URL
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+  awardedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
 }

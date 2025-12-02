@@ -3,7 +3,9 @@
  * 
  * Scoring Rules:
  * - Correct Winner only: 1 point
- * - Correct Winner + Method: 3 points
+ * - Correct Winner + Method: 2 points
+ * - Correct Winner + Round: 3 points
+ * - Correct Winner + DEC: 3 points
  * - Correct Winner + Method + Round (for KO/SUB): 5 points
  * - Incorrect Winner: 0 points
  * 
@@ -11,6 +13,7 @@
  */
 
 import { prisma } from "@/lib/prisma"
+import { checkAndAwardBadges } from "@/app/lib/gamification-actions"
 
 interface Pick {
     winner: string
@@ -62,7 +65,7 @@ export function calculatePickScore(pick: Pick, result: FightResult): number {
 
     // Wrong method, but check if round is correct (only for non-Decision results)
     if (resultMethod !== 'DEC' && pick.round === result.round) {
-        return 2 // Correct winner + round, wrong method
+        return 3 // Correct winner + round, wrong method
     }
 
     // Correct winner only
@@ -118,6 +121,8 @@ export async function calculatePointsForFight(fightId: string) {
 
     for (const userId of userIds) {
         await recalculateUserTotalPoints(userId)
+        // Check for badges
+        await checkAndAwardBadges(userId, fight.eventId)
     }
 
     return { success: true, updates }

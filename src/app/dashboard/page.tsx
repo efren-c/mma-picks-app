@@ -2,8 +2,10 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trophy, History, Check, X } from "lucide-react"
+import { Trophy, History, Check, X, LockKeyhole, HandFist, Medal } from "lucide-react"
 import { DashboardEventCard } from "@/components/DashboardEventCard"
+import { Badge } from "@/components/Badge"
+import { getGlobalLeaderboard } from "@/app/lib/gamification-actions"
 
 export default async function DashboardPage() {
     const session = await auth()
@@ -25,6 +27,11 @@ export default async function DashboardPage() {
                 },
                 orderBy: {
                     updatedAt: 'desc'
+                }
+            },
+            badges: {
+                include: {
+                    badge: true
                 }
             }
         }
@@ -53,40 +60,73 @@ export default async function DashboardPage() {
         new Date(b.event.date).getTime() - new Date(a.event.date).getTime()
     )
 
+    const leaderboard = await getGlobalLeaderboard()
+    const userRank = leaderboard.find(u => u.id === user.id)?.rank
+    const rankDisplay = userRank ? `#${userRank}` : '>50'
+
     return (
         <main className="min-h-screen bg-slate-950 p-8">
             <div className="max-w-4xl mx-auto space-y-8">
                 <h1 className="text-3xl font-bold text-white">Dashboard</h1>
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card className="bg-slate-900/50 border-slate-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-400">Total Points</CardTitle>
-                            <Trophy className="h-4 w-4 text-yellow-500" />
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4">
+                            <CardTitle className="text-xs font-medium text-slate-400">Total Points</CardTitle>
+                            <Trophy className="h-3 w-3 text-yellow-500" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{user.points}</div>
+                        <CardContent className="p-4 pt-0">
+                            <div className="text-xl font-bold text-white">{user.points}</div>
                         </CardContent>
                     </Card>
                     <Card className="bg-slate-900/50 border-slate-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-400">Total Picks</CardTitle>
-                            <History className="h-4 w-4 text-blue-500" />
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4">
+                            <CardTitle className="text-xs font-medium text-slate-400">Total Picks</CardTitle>
+                            <LockKeyhole className="h-3 w-3 text-blue-500" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{user.picks.length}</div>
+                        <CardContent className="p-4 pt-0">
+                            <div className="text-xl font-bold text-white">{user.picks.length}</div>
                         </CardContent>
                     </Card>
                     <Card className="bg-slate-900/50 border-slate-800">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-400">Events</CardTitle>
-                            <Trophy className="h-4 w-4 text-red-500" />
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4">
+                            <CardTitle className="text-xs font-medium text-slate-400">Events</CardTitle>
+                            <HandFist className="h-3 w-3 text-orange-400" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-white">{events.length}</div>
+                        <CardContent className="p-4 pt-0">
+                            <div className="text-xl font-bold text-white">{events.length}</div>
                         </CardContent>
                     </Card>
+                    <Card className="bg-slate-900/50 border-slate-800">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4">
+                            <CardTitle className="text-xs font-medium text-slate-400">Rank</CardTitle>
+                            <Medal className="h-3 w-3 text-purple-500" />
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                            <div className="text-xl font-bold text-white">{rankDisplay}</div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Badges Section */}
+                <div className="space-y-4">
+                    <h2 className="text-xl font-semibold text-white">Badges</h2>
+                    {user.badges.length === 0 ? (
+                        <div className="text-slate-500">No badges earned yet.</div>
+                    ) : (
+                        <div className="flex flex-wrap gap-4">
+                            {user.badges.map((ub) => (
+                                <Badge
+                                    key={ub.id}
+                                    name={ub.badge.name}
+                                    icon={ub.badge.icon}
+                                    description={ub.badge.description}
+                                    size={24}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Events with Picks */}

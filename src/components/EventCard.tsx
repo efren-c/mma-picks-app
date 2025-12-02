@@ -13,6 +13,31 @@ interface EventCardProps {
 }
 
 export function EventCard({ id, name, date, image }: EventCardProps) {
+    const eventDate = new Date(date)
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+
+    let status: 'UPCOMING' | 'LIVE' | 'PAST' = 'UPCOMING'
+    if (eventDate < todayStart) status = 'PAST'
+    else if (eventDate >= todayStart && eventDate <= todayEnd) status = 'LIVE'
+
+    const getStatusColor = () => {
+        switch (status) {
+            case 'LIVE': return 'bg-green-600 text-white animate-pulse'
+            case 'PAST': return 'bg-slate-600 text-slate-200'
+            default: return 'bg-blue-600 text-white'
+        }
+    }
+
+    const getStatusText = () => {
+        switch (status) {
+            case 'LIVE': return 'LIVE NOW'
+            case 'PAST': return 'COMPLETED'
+            default: return 'UPCOMING'
+        }
+    }
+
     return (
         <Link href={`/events/${id}`}>
             <motion.div
@@ -20,13 +45,16 @@ export function EventCard({ id, name, date, image }: EventCardProps) {
                 whileTap={{ scale: 0.98 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-                <Card className="overflow-hidden hover:border-red-600/50 transition-colors cursor-pointer h-full flex flex-col">
+                <Card className={`overflow-hidden transition-colors cursor-pointer h-full flex flex-col border-slate-800 ${status === 'LIVE' ? 'hover:border-green-600/50 border-green-900/30' :
+                        status === 'PAST' ? 'hover:border-slate-600/50' :
+                            'hover:border-blue-600/50'
+                    }`}>
                     <div className="relative h-48 w-full bg-slate-800">
                         {image ? (
                             <img
                                 src={image}
                                 alt={name}
-                                className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
+                                className={`w-full h-full object-cover transition-opacity ${status === 'PAST' ? 'opacity-50 grayscale' : 'opacity-80 hover:opacity-100'}`}
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-600">
@@ -34,9 +62,14 @@ export function EventCard({ id, name, date, image }: EventCardProps) {
                             </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+
+                        {/* Status Badge */}
+                        <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold tracking-wider shadow-lg ${getStatusColor()}`}>
+                            {getStatusText()}
+                        </div>
                     </div>
                     <CardHeader>
-                        <CardTitle className="text-xl text-white">{name}</CardTitle>
+                        <CardTitle className={`text-xl ${status === 'PAST' ? 'text-slate-400' : 'text-white'}`}>{name}</CardTitle>
                     </CardHeader>
                     <CardContent className="mt-auto">
                         <div className="flex items-center text-slate-400 text-sm">

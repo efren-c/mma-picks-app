@@ -66,6 +66,7 @@ export async function submitPick(fightId: string, winner: string, method: string
             })
         }
 
+        revalidatePath(`/events/${fight.eventId}`)
         revalidatePath(`/events`)
         return { success: true }
     } catch (error) {
