@@ -28,6 +28,11 @@ export default async function Home() {
     return eventDate > todayEnd
   })
 
+  const pastEvents = events.filter(event => {
+    const eventDate = new Date(event.date)
+    return eventDate < todayStart
+  })
+
   return (
     <main className="min-h-screen bg-slate-950 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -65,7 +70,7 @@ export default async function Home() {
         {/* Upcoming Events Section */}
         <section>
           <h2 className="text-2xl font-semibold text-white mb-6 flex items-center">
-            <span className="bg-red-600 w-1 h-8 mr-3 rounded-full"></span>
+            <span className="bg-blue-600 w-1 h-8 mr-3 rounded-full"></span>
             Upcoming Events
           </h2>
 
@@ -87,6 +92,28 @@ export default async function Home() {
             </div>
           )}
         </section>
+
+        {/* Past Events Section */}
+        {pastEvents.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-semibold text-slate-400 mb-6 flex items-center">
+              <span className="bg-slate-600 w-1 h-8 mr-3 rounded-full"></span>
+              Past Events
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {pastEvents.map((event) => (
+                <EventCard
+                  key={event.id}
+                  id={event.id}
+                  name={event.name}
+                  date={event.date}
+                  image={event.image}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   )
