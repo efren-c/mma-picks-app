@@ -6,12 +6,21 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
+import { loginRateLimit, registrationRateLimit } from '@/lib/rate-limit'
 
 export async function authenticate(
     prevState: { error?: string; success?: boolean } | undefined,
     formData: FormData
 ) {
     try {
+        const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+        const { success } = await loginRateLimit.limit(ip)
+
+        if (!success) {
+            return { error: 'Too many login attempts. Please try again later.' }
+        }
+
         await signIn('credentials', {
             ...Object.fromEntries(formData),
             redirect: false,
@@ -40,6 +49,13 @@ export async function register(
     prevState: { message: string } | undefined,
     formData: FormData
 ) {
+    const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+    const { success } = await registrationRateLimit.limit(ip)
+
+    if (!success) {
+        return { message: 'Too many registration attempts. Please try again later.' }
+    }
+
     const validatedFields = RegisterSchema.safeParse(
         Object.fromEntries(formData.entries())
     )

@@ -5,11 +5,20 @@ import { randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
 import { sendPasswordResetEmail } from '@/lib/email'
+import { headers } from 'next/headers'
+import { passwordResetRateLimit } from '@/lib/rate-limit'
 
 export async function requestPasswordReset(
     prevState: { message?: string } | undefined,
     formData: FormData
 ) {
+    const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+    const { success } = await passwordResetRateLimit.limit(ip)
+
+    if (!success) {
+        return { message: 'Too many password reset attempts. Please try again later.' }
+    }
+
     const email = formData.get('email')
 
     if (!email || typeof email !== 'string') {
