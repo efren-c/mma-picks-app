@@ -7,6 +7,8 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
+import { randomBytes } from 'crypto'
+import { sendVerificationEmail } from '@/lib/email'
 import { loginRateLimit, registrationRateLimit } from '@/lib/rate-limit'
 
 export async function authenticate(
@@ -79,26 +81,30 @@ export async function register(
             return { message: 'User already exists' }
         }
 
+
         const hashedPassword = await bcrypt.hash(password, 10)
+        const verificationToken = randomBytes(32).toString('hex')
 
         await prisma.user.create({
             data: {
                 username,
                 email,
                 password: hashedPassword,
+                verificationToken,
             },
         })
 
-        // Automatically sign in the newly created user
-        await signIn('credentials', {
-            email,
-            password,
-            redirect: false,
+        await sendVerificationEmail({
+            to: email,
+            token: verificationToken,
+            username,
         })
+
     } catch (error) {
+        console.error('Registration error:', error)
         return { message: 'Database Error: Failed to Create User.' }
     }
 
-    // Redirect to home page after successful registration and login
-    redirect('/')
+    // Redirect to verification page
+    redirect('/verify-email')
 }

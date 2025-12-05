@@ -20,6 +20,8 @@ model User {
   username  String   @unique
   role      String   @default("USER") // "USER" or "ADMIN"
   points    Int      @default(0)
+  emailVerified DateTime?
+  verificationToken String? @unique
   resetToken String? @unique
   resetTokenExpiry DateTime?
   picks     Pick[]

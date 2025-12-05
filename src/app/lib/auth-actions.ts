@@ -100,5 +100,26 @@ export async function resetPassword(
         },
     })
 
+
     redirect('/login?reset=success')
+}
+
+export async function verifyEmail(token: string) {
+    const user = await prisma.user.findUnique({
+        where: { verificationToken: token },
+    })
+
+    if (!user) {
+        return { success: false, message: 'Invalid token' }
+    }
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            emailVerified: new Date(),
+            verificationToken: null,
+        },
+    })
+
+    return { success: true, message: 'Email verified successfully' }
 }
