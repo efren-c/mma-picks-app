@@ -105,6 +105,25 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
         }
     }
 
+    const getSelectionStatus = (type: 'winner' | 'method' | 'round', value: string | number) => {
+        const isSelected = type === 'winner' ? winner === value
+            : type === 'method' ? method === value
+                : round === value
+
+        if (!isSelected) return 'unselected'
+
+        // Check if it matches existing pick
+        if (existingPick) {
+            const isSaved = type === 'winner' ? existingPick.winner === value
+                : type === 'method' ? existingPick.method === value
+                    : existingPick.round === value
+
+            if (isSaved) return 'saved'
+        }
+
+        return 'selected'
+    }
+
     return (
         <div className="space-y-4">
             {isLocked && (
@@ -117,31 +136,37 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
 
             <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                    <span className="w-1 h-3 bg-red-600 rounded-full"></span>
+                    <span className={`w-1 h-3 rounded-full ${existingPick?.winner === winner ? 'bg-green-500' : 'bg-red-600'}`}></span>
                     Who wins?
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                    {[fighterA, fighterB].map((fighter) => (
-                        <button
-                            key={fighter}
-                            onClick={() => !isLocked && setWinner(fighter)}
-                            disabled={isLocked}
-                            className={`
+                    {[fighterA, fighterB].map((fighter) => {
+                        const status = getSelectionStatus('winner', fighter)
+                        return (
+                            <button
+                                key={fighter}
+                                onClick={() => !isLocked && setWinner(fighter)}
+                                disabled={isLocked}
+                                className={`
                 relative p-3 rounded-lg border-2 transition-all duration-200 group
-                ${winner === fighter
-                                    ? 'border-red-600 bg-gradient-to-br from-red-600/20 to-red-900/20 text-white shadow-md shadow-red-900/20'
-                                    : 'border-slate-700 bg-slate-800/50 hover:border-slate-500 hover:bg-slate-800 text-slate-300'}
+                ${status === 'saved'
+                                        ? 'border-green-600 bg-gradient-to-br from-green-600/20 to-green-900/20 text-white shadow-md shadow-green-900/20'
+                                        : status === 'selected'
+                                            ? 'border-red-600 bg-gradient-to-br from-red-600/20 to-red-900/20 text-white shadow-md shadow-red-900/20'
+                                            : 'border-slate-700 bg-slate-800/50 hover:border-slate-500 hover:bg-slate-800 text-slate-300'}
                 ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}
               `}
-                        >
-                            <span className="text-sm font-bold tracking-tight line-clamp-1">{fighter}</span>
-                            {winner === fighter && (
-                                <div className="absolute top-2 right-2 text-red-500 bg-red-950/50 rounded-full p-0.5">
-                                    <Check className="w-3 h-3" />
-                                </div>
-                            )}
-                        </button>
-                    ))}
+                            >
+                                <span className="text-sm font-bold tracking-tight line-clamp-1">{fighter}</span>
+                                {status !== 'unselected' && (
+                                    <div className={`absolute top-2 right-2 rounded-full p-0.5 ${status === 'saved' ? 'text-green-500 bg-green-950/50' : 'text-red-500 bg-red-950/50'
+                                        }`}>
+                                        <Check className="w-3 h-3" />
+                                    </div>
+                                )}
+                            </button>
+                        )
+                    })}
                 </div>
             </div>
 
@@ -153,29 +178,34 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                 >
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <span className="w-1 h-3 bg-red-600 rounded-full"></span>
+                            <span className={`w-1 h-3 rounded-full ${existingPick?.method === method ? 'bg-green-500' : 'bg-red-600'}`}></span>
                             Method
                         </label>
                         <div className="grid grid-cols-3 gap-2">
-                            {['KO/TKO', 'Submission', 'Decision'].map((m) => (
-                                <button
-                                    key={m}
-                                    onClick={() => !isLocked && setMethod(m)}
-                                    disabled={isLocked}
-                                    className={`
+                            {['KO/TKO', 'Submission', 'Decision'].map((m) => {
+                                const status = getSelectionStatus('method', m)
+                                return (
+                                    <button
+                                        key={m}
+                                        onClick={() => !isLocked && setMethod(m)}
+                                        disabled={isLocked}
+                                        className={`
                     flex flex-col items-center justify-center gap-1.5 p-2 rounded-lg border-2 transition-all duration-200
-                    ${method === m
-                                            ? 'border-red-600 bg-red-600 text-white shadow-md shadow-red-900/20 scale-[1.02]'
-                                            : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200'}
+                    ${status === 'saved'
+                                                ? 'border-green-600 bg-green-600 text-white shadow-md shadow-green-900/20 scale-[1.02]'
+                                                : status === 'selected'
+                                                    ? 'border-red-600 bg-red-600 text-white shadow-md shadow-red-900/20 scale-[1.02]'
+                                                    : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200'}
                     ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}
                   `}
-                                >
-                                    <div className={`p-1.5 rounded-full ${method === m ? 'bg-white/20' : 'bg-slate-900/50'}`}>
-                                        {getMethodIcon(m)}
-                                    </div>
-                                    <span className="text-[10px] font-bold uppercase tracking-wide">{m}</span>
-                                </button>
-                            ))}
+                                    >
+                                        <div className={`p-1.5 rounded-full ${status !== 'unselected' ? 'bg-white/20' : 'bg-slate-900/50'}`}>
+                                            {getMethodIcon(m)}
+                                        </div>
+                                        <span className="text-[10px] font-bold uppercase tracking-wide">{m}</span>
+                                    </button>
+                                )
+                            })}
                         </div>
                     </div>
 
@@ -186,26 +216,31 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                             className="space-y-2"
                         >
                             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                <span className="w-1 h-3 bg-red-600 rounded-full"></span>
+                                <span className={`w-1 h-3 rounded-full ${existingPick?.round === round ? 'bg-green-500' : 'bg-red-600'}`}></span>
                                 Round
                             </label>
                             <div className="flex flex-wrap gap-2">
-                                {Array.from({ length: scheduledRounds }, (_, i) => i + 1).map((r) => (
-                                    <button
-                                        key={r}
-                                        onClick={() => !isLocked && setRound(r)}
-                                        disabled={isLocked}
-                                        className={`
+                                {Array.from({ length: scheduledRounds }, (_, i) => i + 1).map((r) => {
+                                    const status = getSelectionStatus('round', r)
+                                    return (
+                                        <button
+                                            key={r}
+                                            onClick={() => !isLocked && setRound(r)}
+                                            disabled={isLocked}
+                                            className={`
                       w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black transition-all duration-200 border-2
-                      ${round === r
-                                                ? 'border-red-600 bg-red-600 text-white shadow-md shadow-red-900/20 scale-105'
-                                                : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-500 hover:bg-slate-800 hover:text-white'}
+                      ${status === 'saved'
+                                                    ? 'border-green-600 bg-green-600 text-white shadow-md shadow-green-900/20 scale-105'
+                                                    : status === 'selected'
+                                                        ? 'border-red-600 bg-red-600 text-white shadow-md shadow-red-900/20 scale-105'
+                                                        : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-500 hover:bg-slate-800 hover:text-white'}
                       ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}
                     `}
-                                    >
-                                        {r}
-                                    </button>
-                                ))}
+                                        >
+                                            {r}
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </motion.div>
                     )}
@@ -215,9 +250,13 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                             <button
                                 onClick={handleSubmit}
                                 disabled={!winner || !method || (method !== 'Decision' && !round) || isSubmitting}
-                                className="w-full py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold uppercase tracking-widest rounded-lg transition-all shadow-md shadow-red-900/20 active:scale-[0.98] text-sm"
+                                className={`w-full py-3 font-bold uppercase tracking-widest rounded-lg transition-all shadow-md active:scale-[0.98] text-sm disabled:opacity-50 disabled:cursor-not-allowed
+                                ${userHasChanges()
+                                        ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 shadow-red-900/20 text-white'
+                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 shadow-green-900/20 text-white'
+                                    }`}
                             >
-                                {isSubmitting ? "Saving..." : hasSubmittedPick ? "Update Pick" : "Submit Pick"}
+                                {isSubmitting ? "Saving..." : userHasChanges() ? "Submit Pick" : "Pick Saved"}
                             </button>
                         </div>
                     )}
@@ -225,4 +264,12 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
             )}
         </div>
     )
+
+    function userHasChanges() {
+        if (!existingPick) return true
+        if (existingPick.winner !== winner) return true
+        if (existingPick.method !== method) return true
+        if (existingPick.method !== 'Decision' && existingPick.round !== round) return true
+        return false
+    }
 }
