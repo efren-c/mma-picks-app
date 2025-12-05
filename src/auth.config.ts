@@ -5,11 +5,13 @@ export const authConfig = {
         signIn: '/login',
     },
     callbacks: {
-        async jwt({ token, user }) {
-            // Add username and role to the token when user signs in
-            if (user) {
-                token.username = user.username
-                token.role = user.role
+        async jwt({ token, user, trigger }) {
+            if (trigger === 'signIn' || trigger === 'signUp') {
+                if (user) {
+                    token.username = user.username
+                    token.role = user.role
+                    token.sub = user.id
+                }
             }
             return token
         },

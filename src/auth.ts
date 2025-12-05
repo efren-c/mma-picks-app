@@ -43,4 +43,47 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
             },
         }),
     ],
+    callbacks: {
+        ...authConfig.callbacks,
+        async jwt({ token, user, trigger }) {
+            // 1. Standard token population
+            if (trigger === 'signIn' || trigger === 'signUp') {
+                if (user) {
+                    token.username = user.username
+                    token.role = user.role
+                    token.sub = user.id
+                }
+            }
+
+            // 2. Session invalidation: check if password changed after token issuance
+            if (token.sub) {
+                try {
+                    const existingUser = await prisma.user.findUnique({
+                        where: { id: token.sub },
+                        select: { lastPasswordChange: true, username: true, role: true }
+                    })
+
+                    if (!existingUser) return null; // User deleted
+
+                    // Keep token up to date with DB changes
+                    token.username = existingUser.username
+                    token.role = existingUser.role
+
+                    if (existingUser.lastPasswordChange) {
+                        const lastChangeTime = Math.floor(existingUser.lastPasswordChange.getTime() / 1000)
+                        const tokenIssuedAt = token.iat as number
+
+                        // Allow 1 second clock skew
+                        if (lastChangeTime > tokenIssuedAt + 1) {
+                            return null // Invalidate session
+                        }
+                    }
+                } catch (error) {
+                    console.error("Session verification failed", error)
+                }
+            }
+
+            return token
+        },
+    },
 });

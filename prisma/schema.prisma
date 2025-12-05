@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL") // Used for migrations on Vercel
+  // directUrl = env("DIRECT_URL") // Used for migrations on Vercel
 }
 
 // ℹ️ For local development with SQLite:
@@ -24,6 +24,7 @@ model User {
   verificationToken String? @unique
   resetToken String? @unique
   resetTokenExpiry DateTime?
+  lastPasswordChange DateTime?
   picks     Pick[]
   badges    UserBadge[]
 }

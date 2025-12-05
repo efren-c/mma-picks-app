@@ -105,6 +105,7 @@ export async function resetPassword(
             password: hashedPassword,
             resetToken: null,
             resetTokenExpiry: null,
+            lastPasswordChange: new Date(),
         },
     })
 
