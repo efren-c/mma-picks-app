@@ -1,7 +1,10 @@
+import NextAuth from 'next-auth';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { authConfig } from './auth.config';
 
-export function middleware(request: NextRequest) {
+const { auth } = NextAuth(authConfig);
+
+export default auth((req) => {
     const response = NextResponse.next();
 
     // Security Headers
@@ -30,7 +33,7 @@ export function middleware(request: NextRequest) {
     }
 
     return response;
-}
+});
 
 // Configure paths that middleware applies to
 export const config = {

@@ -2,7 +2,6 @@
 
 import { signIn } from '@/auth'
 import { AuthError } from 'next-auth'
-import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
@@ -10,6 +9,7 @@ import { headers } from 'next/headers'
 import { randomBytes } from 'crypto'
 import { sendVerificationEmail } from '@/lib/email'
 import { loginRateLimit, registrationRateLimit } from '@/lib/rate-limit'
+import { LoginSchema, RegisterSchema } from '@/lib/validation-schemas'
 
 export async function authenticate(
     prevState: { error?: string; success?: boolean } | undefined,
@@ -23,8 +23,22 @@ export async function authenticate(
             return { error: 'Too many login attempts. Please try again later.' }
         }
 
+        // Validate input
+        const validatedFields = LoginSchema.safeParse({
+            email: formData.get('email'),
+            password: formData.get('password'),
+        })
+
+        if (!validatedFields.success) {
+            const firstError = Object.values(validatedFields.error.flatten().fieldErrors)[0]
+            return { error: firstError?.[0] || 'Invalid credentials' }
+        }
+
+        const { email, password } = validatedFields.data
+
         await signIn('credentials', {
-            ...Object.fromEntries(formData),
+            email,
+            password,
             redirect: false,
         })
         return { success: true }
@@ -41,11 +55,7 @@ export async function authenticate(
     }
 }
 
-const RegisterSchema = z.object({
-    username: z.string().min(3, 'Username must be at least 3 characters'),
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
-})
+
 
 export async function register(
     prevState: { message: string } | undefined,

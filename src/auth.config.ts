@@ -6,28 +6,43 @@ export const authConfig = {
     },
     callbacks: {
         async jwt({ token, user }) {
-            // Add username to the token when user signs in
+            // Add username and role to the token when user signs in
             if (user) {
                 token.username = user.username
+                token.role = user.role
             }
             return token
         },
         async session({ session, token }) {
-            // Add username to the session from the token
+            // Add username and role to the session from the token
             if (session.user) {
                 session.user.username = token.username as string
+                session.user.role = token.role as string
             }
             return session
         },
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
-            const isOnDashboard = nextUrl.pathname.startsWith('/dashboard'); // Example protected route
+            const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
+            const isOnAdmin = nextUrl.pathname.startsWith('/admin');
+
+            console.log('Middleware Authorized Check:', {
+                pathname: nextUrl.pathname,
+                isLoggedIn,
+                role: auth?.user?.role,
+                isOnAdmin
+            });
+
+            if (isOnAdmin) {
+                if (isLoggedIn && auth?.user?.role === 'ADMIN') return true;
+                return false; // Redirect unauthorized users
+            }
+
             if (isOnDashboard) {
                 if (isLoggedIn) return true;
                 return false; // Redirect unauthenticated users to login page
-            } else if (isLoggedIn) {
-                // return Response.redirect(new URL('/dashboard', nextUrl));
             }
+
             return true;
         },
     },

@@ -4,7 +4,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
+import { EventSchema, FightSchema, ResultSchema } from '@/lib/validation-schemas'
 
 async function requireAdmin() {
     const session = await auth()
@@ -23,11 +23,7 @@ async function requireAdmin() {
     return user
 }
 
-const EventSchema = z.object({
-    name: z.string().min(1, 'Event name is required'),
-    date: z.string().min(1, 'Date is required'),
-    image: z.string().optional(),
-})
+
 
 export async function createEvent(
     prevState: { message?: string } | undefined,
@@ -101,11 +97,7 @@ export async function updateEvent(
     }
 }
 
-const FightSchema = z.object({
-    fighterA: z.string().min(1, 'Fighter A is required'),
-    fighterB: z.string().min(1, 'Fighter B is required'),
-    order: z.string().min(1, 'Order is required'),
-})
+
 
 export async function createFight(
     eventId: string,
@@ -114,13 +106,20 @@ export async function createFight(
 ) {
     await requireAdmin()
 
-    const fighterA = formData.get('fighterA')
-    const fighterB = formData.get('fighterB')
-    const scheduledRounds = parseInt(formData.get('scheduledRounds') as string) || 3
+    const validatedFields = FightSchema.safeParse({
+        fighterA: formData.get('fighterA'),
+        fighterB: formData.get('fighterB'),
+        order: '1', // Temporary, will calculate actual order
+        scheduledRounds: formData.get('scheduledRounds') || '3',
+    })
 
-    if (!fighterA || !fighterB || typeof fighterA !== 'string' || typeof fighterB !== 'string') {
-        return { message: 'Invalid fields' }
+    if (!validatedFields.success) {
+        const firstError = Object.values(validatedFields.error.flatten().fieldErrors)[0]
+        return { message: firstError?.[0] || 'Invalid fields' }
     }
+
+    const { fighterA, fighterB } = validatedFields.data
+    const scheduledRounds = parseInt(formData.get('scheduledRounds') as string) || 3
 
     try {
         // Get current max order
@@ -156,13 +155,20 @@ export async function updateFight(
 ) {
     await requireAdmin()
 
-    const fighterA = formData.get('fighterA')
-    const fighterB = formData.get('fighterB')
-    const scheduledRounds = parseInt(formData.get('scheduledRounds') as string) || 3
+    const validatedFields = FightSchema.safeParse({
+        fighterA: formData.get('fighterA'),
+        fighterB: formData.get('fighterB'),
+        order: '1', // Not changing order in update
+        scheduledRounds: formData.get('scheduledRounds') || '3',
+    })
 
-    if (!fighterA || !fighterB || typeof fighterA !== 'string' || typeof fighterB !== 'string') {
-        return { message: 'Invalid fields' }
+    if (!validatedFields.success) {
+        const firstError = Object.values(validatedFields.error.flatten().fieldErrors)[0]
+        return { message: firstError?.[0] || 'Invalid fields' }
     }
+
+    const { fighterA, fighterB } = validatedFields.data
+    const scheduledRounds = parseInt(formData.get('scheduledRounds') as string) || 3
 
     try {
         await prisma.fight.update({
@@ -181,21 +187,7 @@ export async function updateFight(
     }
 }
 
-const ResultSchema = z.object({
-    winner: z.enum(['A', 'B']),
-    method: z.enum(['KO', 'SUB', 'DEC']),
-    round: z.string().optional(),
-}).refine(
-    (data) => {
-        // Round is required for KO and SUB, but not for DEC
-        if (data.method === 'DEC') return true
-        return data.round && data.round.length > 0
-    },
-    {
-        message: 'Round is required for KO/TKO and Submission',
-        path: ['round'],
-    }
-)
+
 
 export async function updateFightResult(
     fightId: string,

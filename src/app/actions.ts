@@ -11,6 +11,22 @@ export async function submitPick(fightId: string, winner: string, method: string
         return { error: "You must be logged in to make a pick" }
     }
 
+    // Validate inputs - Import PickSchema at the top if not already done
+    const { PickSchema } = await import('@/lib/validation-schemas')
+    const validatedFields = PickSchema.safeParse({
+        fightId,
+        winner,
+        method,
+        round,
+    })
+
+    if (!validatedFields.success) {
+        const firstError = Object.values(validatedFields.error.flatten().fieldErrors)[0]
+        return { error: firstError?.[0] || 'Invalid pick data' }
+    }
+
+    const validatedData = validatedFields.data
+
     const user = await prisma.user.findUnique({
         where: { email: session.user.email }
     })
