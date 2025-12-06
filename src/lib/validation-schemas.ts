@@ -104,7 +104,7 @@ export const PickSchema = z.object({
     round: z
         .number()
         .int('Round must be a whole number')
-        .min(1, 'Round must be at least 1')
+        .min(0, 'Round must be at least 0')
         .max(5, 'Round must be at most 5'),
 })
 

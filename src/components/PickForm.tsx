@@ -20,18 +20,34 @@ interface PickFormProps {
 }
 
 export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existingPick, isLocked = false }: PickFormProps) {
-    const [winner, setWinner] = useState<string | null>(existingPick?.winner || null)
-    const [method, setMethod] = useState<string | null>(existingPick?.method || null)
-    const [round, setRound] = useState<number | null>(existingPick?.round || null)
+    // Helper function to convert database format to UI format
+    const convertPickToUIFormat = (pick: typeof existingPick) => {
+        if (!pick) return { winner: null, method: null, round: null }
+
+        return {
+            winner: pick.winner === 'A' ? fighterA : fighterB,
+            method: pick.method === 'KO' ? 'KO/TKO'
+                : pick.method === 'SUB' ? 'Submission'
+                    : 'Decision',
+            round: pick.round
+        }
+    }
+
+    const initialUIFormat = convertPickToUIFormat(existingPick)
+
+    const [winner, setWinner] = useState<string | null>(initialUIFormat.winner)
+    const [method, setMethod] = useState<string | null>(initialUIFormat.method)
+    const [round, setRound] = useState<number | null>(initialUIFormat.round)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [hasSubmittedPick, setHasSubmittedPick] = useState(!!existingPick)
 
     // Update form when existingPick changes
     useEffect(() => {
         if (existingPick) {
-            setWinner(existingPick.winner)
-            setMethod(existingPick.method)
-            setRound(existingPick.round)
+            const uiFormat = convertPickToUIFormat(existingPick)
+            setWinner(uiFormat.winner)
+            setMethod(uiFormat.method)
+            setRound(uiFormat.round)
             setHasSubmittedPick(true)
         }
     }, [existingPick])
@@ -122,9 +138,22 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
 
         // Check if it matches existing pick
         if (existingPick) {
-            const isSaved = type === 'winner' ? existingPick.winner === value
-                : type === 'method' ? existingPick.method === value
-                    : existingPick.round === value
+            let isSaved = false
+
+            if (type === 'winner') {
+                // Convert database 'A'/'B' to fighter name for comparison
+                const savedWinner = existingPick.winner === 'A' ? fighterA : fighterB
+                isSaved = savedWinner === value
+            } else if (type === 'method') {
+                // Convert database code to UI label for comparison
+                const savedMethod = existingPick.method === 'KO' ? 'KO/TKO'
+                    : existingPick.method === 'SUB' ? 'Submission'
+                        : 'Decision'
+                isSaved = savedMethod === value
+            } else {
+                // Round is stored the same way
+                isSaved = existingPick.round === value
+            }
 
             if (isSaved) return 'saved'
         }
@@ -162,7 +191,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                                         : status === 'selected'
                                             ? 'border-red-600 bg-gradient-to-br from-red-600/20 to-red-900/20 text-white shadow-md shadow-red-900/20'
                                             : 'border-slate-700 bg-slate-800/50 hover:border-slate-500 hover:bg-slate-800 text-slate-300'}
-                ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}
+                ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
               `}
                             >
                                 <span className="text-sm font-bold tracking-tight line-clamp-1">{fighter}</span>
@@ -204,7 +233,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                                                 : status === 'selected'
                                                     ? 'border-red-600 bg-red-600 text-white shadow-md shadow-red-900/20 scale-[1.02]'
                                                     : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200'}
-                    ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}
+                    ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
                   `}
                                     >
                                         <div className={`p-1.5 rounded-full ${status !== 'unselected' ? 'bg-white/20' : 'bg-slate-900/50'}`}>
@@ -242,7 +271,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                                                     : status === 'selected'
                                                         ? 'border-red-600 bg-red-600 text-white shadow-md shadow-red-900/20 scale-105'
                                                         : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-500 hover:bg-slate-800 hover:text-white'}
-                      ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}
+                      ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
                     `}
                                         >
                                             {r}
@@ -264,7 +293,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                                         : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 shadow-green-900/20 text-white'
                                     }`}
                             >
-                                {isSubmitting ? "Saving..." : userHasChanges() ? "Submit Pick" : "Pick Saved"}
+                                {isSubmitting ? "Saving..." : userHasChanges() ? (existingPick ? "Update Pick" : "Submit Pick") : "Pick Saved"}
                             </button>
                         </div>
                     )}
