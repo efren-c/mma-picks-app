@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { EventSchema, FightSchema, ResultSchema } from '@/lib/validation-schemas'
+import { fromZonedTime } from 'date-fns-tz'
 
 async function requireAdmin() {
     const session = await auth()
@@ -48,7 +49,7 @@ export async function createEvent(
         event = await prisma.event.create({
             data: {
                 name,
-                date: new Date(date),
+                date: fromZonedTime(date as string, 'America/Mexico_City'),
                 image: image || null,
             },
         })
@@ -84,7 +85,7 @@ export async function updateEvent(
             where: { id: eventId },
             data: {
                 name,
-                date: new Date(date),
+                date: fromZonedTime(date as string, 'America/Mexico_City'),
                 image: image || null,
             },
         })
