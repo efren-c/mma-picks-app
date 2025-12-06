@@ -19,7 +19,7 @@ export default auth((req) => {
         default-src 'self';
         script-src 'self' 'nonce-${nonce}' 'strict-dynamic';
         style-src 'self' 'unsafe-inline';
-        img-src 'self' blob: data:;
+        img-src 'self' blob: data: https:;
         font-src 'self';
         object-src 'none';
         base-uri 'self';
