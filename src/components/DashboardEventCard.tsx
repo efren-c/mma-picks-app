@@ -100,9 +100,9 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                                                     </div>
                                                     <div className="text-xs text-slate-400 mt-1">
                                                         Your pick: <span className="font-semibold text-red-400">
-                                                            {pick.winner}
-                                                        </span> via {pick.method}
-                                                        {pick.method !== 'Decision' && ` (R${pick.round})`}
+                                                            {pick.winner === 'A' ? pick.fight.fighterA : pick.fight.fighterB}
+                                                        </span> via {pick.method === 'KO' ? 'KO/TKO' : pick.method === 'SUB' ? 'Submission' : 'Decision'}
+                                                        {pick.method !== 'DEC' && ` (R${pick.round})`}
                                                     </div>
                                                 </div>
                                                 {hasFightResult && (
