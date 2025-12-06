@@ -92,7 +92,7 @@ export const EmailVerificationTokenSchema = z
 export const PickSchema = z.object({
     fightId: z
         .string()
-        .uuid('Invalid fight ID'),
+        .min(1, 'Invalid fight ID'),
     winner: z
         .enum(['A', 'B'], {
             message: 'Winner must be either Fighter A or Fighter B',

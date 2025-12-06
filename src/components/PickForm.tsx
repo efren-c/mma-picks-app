@@ -41,10 +41,18 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
 
         setIsSubmitting(true)
 
+        // Convert fighter name to 'A' or 'B'
+        const winnerCode = winner === fighterA ? 'A' : 'B'
+
+        // Convert method from UI format to database format
+        const methodCode = method === 'KO/TKO' ? 'KO'
+            : method === 'Submission' ? 'SUB'
+                : 'DEC'
+
         // Default round to 0 if not applicable (e.g. Decision)
         const finalRound = (method === 'Decision') ? 0 : (round || 0)
 
-        const result = await submitPick(fightId, winner, method, finalRound)
+        const result = await submitPick(fightId, winnerCode, methodCode, finalRound)
 
         setIsSubmitting(false)
 
