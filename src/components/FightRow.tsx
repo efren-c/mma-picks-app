@@ -63,7 +63,15 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate }: FightR
         : fight.winner === 'B'
             ? fight.fighterB
             : fight.winner
-    const isCorrectPick = hasUserPick && hasFightResult && existingPick.winner === actualWinner
+
+    // Resolve pick winner from 'A'/'B' to actual fighter name
+    const pickWinnerName = existingPick?.winner === 'A'
+        ? fight.fighterA
+        : existingPick?.winner === 'B'
+            ? fight.fighterB
+            : existingPick?.winner
+
+    const isCorrectPick = hasUserPick && hasFightResult && pickWinnerName === actualWinner
     const points = existingPick?.points || 0
 
     // Format method display

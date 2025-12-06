@@ -99,8 +99,13 @@ export async function calculatePointsForFight(fightId: string) {
     let updates = 0
 
     for (const pick of fight.picks) {
+        // Convert pick winner from 'A'/'B' to fighter name for comparison
+        let pickWinnerName = pick.winner
+        if (pick.winner === 'A') pickWinnerName = fight.fighterA
+        if (pick.winner === 'B') pickWinnerName = fight.fighterB
+
         const pickData: Pick = {
-            winner: pick.winner,
+            winner: pickWinnerName,
             method: pick.method,
             round: pick.round
         }

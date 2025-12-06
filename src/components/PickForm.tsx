@@ -304,9 +304,20 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
 
     function userHasChanges() {
         if (!existingPick) return true
-        if (existingPick.winner !== winner) return true
-        if (existingPick.method !== method) return true
-        if (existingPick.method !== 'Decision' && existingPick.round !== round) return true
+
+        // Convert database winner to UI format for comparison
+        const savedWinner = existingPick.winner === 'A' ? fighterA : fighterB
+        if (savedWinner !== winner) return true
+
+        // Convert database method to UI format for comparison
+        const savedMethod = existingPick.method === 'KO' ? 'KO/TKO'
+            : existingPick.method === 'SUB' ? 'Submission'
+                : 'Decision'
+        if (savedMethod !== method) return true
+
+        // Round comparison (no conversion needed)
+        if (existingPick.method !== 'DEC' && existingPick.round !== round) return true
+
         return false
     }
 }

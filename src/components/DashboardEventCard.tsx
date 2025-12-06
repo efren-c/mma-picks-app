@@ -81,7 +81,15 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                                         : pick.fight.winner === 'B'
                                             ? pick.fight.fighterB
                                             : pick.fight.winner
-                                    const isCorrect = hasFightResult && pick.winner === actualWinner
+
+                                    // Resolve pick winner from 'A'/'B' to actual fighter name
+                                    const pickWinnerName = pick.winner === 'A'
+                                        ? pick.fight.fighterA
+                                        : pick.winner === 'B'
+                                            ? pick.fight.fighterB
+                                            : pick.winner
+
+                                    const isCorrect = hasFightResult && pickWinnerName === actualWinner
 
                                     return (
                                         <div
