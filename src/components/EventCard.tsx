@@ -16,11 +16,19 @@ export function EventCard({ id, name, date, image }: EventCardProps) {
     const eventDate = new Date(date)
     const now = new Date()
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
 
     let status: 'UPCOMING' | 'LIVE' | 'PAST' = 'UPCOMING'
-    if (eventDate < todayStart) status = 'PAST'
-    else if (eventDate >= todayStart && eventDate <= todayEnd) status = 'LIVE'
+
+    if (eventDate < todayStart) {
+        // Event was on a previous day
+        status = 'PAST'
+    } else if (eventDate <= now) {
+        // Event started today (current time has passed event start time)
+        status = 'LIVE'
+    } else {
+        // Event hasn't started yet (either future day or today but time hasn't arrived)
+        status = 'UPCOMING'
+    }
 
     const getStatusColor = () => {
         switch (status) {
@@ -46,8 +54,8 @@ export function EventCard({ id, name, date, image }: EventCardProps) {
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
                 <Card className={`overflow-hidden transition-colors cursor-pointer h-full flex flex-col border-slate-800 ${status === 'LIVE' ? 'hover:border-green-600/50 border-green-900/30' :
-                        status === 'PAST' ? 'hover:border-slate-600/50' :
-                            'hover:border-blue-600/50'
+                    status === 'PAST' ? 'hover:border-slate-600/50' :
+                        'hover:border-blue-600/50'
                     }`}>
                     <div className="relative h-48 w-full bg-slate-800">
                         {image ? (
