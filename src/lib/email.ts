@@ -21,7 +21,7 @@ export async function sendPasswordResetEmail({
     // Production: 'MMA Picks <noreply@yourdomain.com>' (requires domain verification)
     // Add email rate limiting
     const { data, error } = await resend.emails.send({
-      from: 'MMA Picks <onboarding@resend.dev>',
+      from: 'MMA Picks <noreply@picks-mma.com>',
       to: [to],
       subject: 'Reset Your Password - MMA Picks',
       html: getPasswordResetEmailHTML(username, resetLink),
@@ -135,7 +135,7 @@ export async function sendVerificationEmail({
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'MMA Picks <onboarding@resend.dev>',
+      from: 'MMA Picks <noreply@picks-mma.com>',
       to: [to],
       subject: 'Verify Your Email - MMA Picks',
       html: getVerificationEmailHTML(username, verifyLink),
