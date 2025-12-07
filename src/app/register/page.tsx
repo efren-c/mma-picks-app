@@ -13,7 +13,9 @@ export default function RegisterPage() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [passwordError, setPasswordError] = useState<string | null>(null)
 
-    const handleSubmit = (formData: FormData) => {
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        const formData = new FormData(event.currentTarget)
         const password = formData.get("password") as string
         const confirmPassword = formData.get("confirmPassword") as string
 
@@ -33,7 +35,7 @@ export default function RegisterPage() {
                     <CardTitle className="text-xl text-center text-white">Create Account</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form action={handleSubmit} className="space-y-3">
+                    <form onSubmit={handleSubmit} className="space-y-3">
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-slate-400">Username</label>
                             <input
