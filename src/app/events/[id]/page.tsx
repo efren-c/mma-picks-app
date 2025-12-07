@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
-import { Calendar, Trophy } from "lucide-react"
+import { Calendar, Clock, Trophy } from "lucide-react"
 import { FightRow } from "@/components/FightRow"
 import { auth } from "@/auth"
 import { Card } from "@/components/ui/card"
@@ -66,7 +66,7 @@ export default async function EventPage({ params }: EventPageProps) {
     const eventDate = new Date(event.date)
     const now = new Date()
     // Adjust "now" to ensure we capture late night events as "today" even after UTC midnight
-    const adjustedNow = new Date(now.getTime() - 4 * 60 * 60 * 1000)
+    const adjustedNow = new Date(now.getTime() - 2 * 60 * 60 * 1000)
     const todayStart = new Date(adjustedNow.getFullYear(), adjustedNow.getMonth(), adjustedNow.getDate())
     const isEventCompleted = eventDate < todayStart
 
@@ -90,14 +90,21 @@ export default async function EventPage({ params }: EventPageProps) {
                             <h1 className="text-4xl font-bold text-white mb-2">{event.name}</h1>
                             <div className="flex items-center text-slate-300">
                                 <Calendar className="w-5 h-5 mr-2" />
-                                {new Date(event.date).toLocaleDateString(undefined, {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
+                                <span>
+                                    {new Date(event.date).toLocaleDateString('en-GB', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: '2-digit'
+                                    })}
+                                </span>
+                                <span className="mx-2 text-slate-600">•</span>
+                                <Clock className="w-4 h-4 mr-2" />
+                                <span>
+                                    {new Date(event.date).toLocaleTimeString(undefined, {
+                                        hour: 'numeric',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
                             </div>
                         </div>
                     </div>
