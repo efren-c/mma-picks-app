@@ -113,8 +113,8 @@ function FightResultForm({ fight, eventId }: { fight: Fight; eventId: string }) 
                         className="w-full p-2 rounded-md bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-red-600"
                     >
                         <option value="">Select</option>
-                        <option value="A">Red corner</option>
-                        <option value="B">Blue corner</option>
+                        <option value="A">{fight.fighterA}</option>
+                        <option value="B">{fight.fighterB}</option>
                     </select>
                 </div>
 
