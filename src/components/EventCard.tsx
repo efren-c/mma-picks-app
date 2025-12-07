@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Trophy } from "lucide-react"
+import { Calendar, Trophy, Clock } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
@@ -85,16 +85,29 @@ export function EventCard({ id, name, date, image, slug }: EventCardProps) {
                     <CardContent className="mt-auto">
                         <div className="flex items-center text-slate-400 text-sm">
                             <Calendar className="w-4 h-4 mr-2" />
-                            {new Date(date).toLocaleDateString(undefined, {
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                            })}
+                            <span>
+                                {new Date(date).toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: '2-digit'
+                                })}
+                            </span>
+                            {(status === 'LIVE' || status === 'UPCOMING') && (
+                                <>
+                                    <span className="mx-2 text-slate-600">•</span>
+                                    <Clock className="w-4 h-4 mr-2" />
+                                    <span>
+                                        {new Date(date).toLocaleTimeString(undefined, {
+                                            hour: 'numeric',
+                                            minute: '2-digit'
+                                        })}
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
             </motion.div>
-        </Link>
+        </Link >
     )
 }
