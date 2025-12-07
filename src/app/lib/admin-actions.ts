@@ -44,17 +44,40 @@ export async function createEvent(
 
     const { name, date, image } = validatedFields.data
 
+    // Dynamic import to avoid earlier issues if utils wasn't ready, but standard import is fine now
+    const { slugify } = await import('@/lib/utils')
+    let slug = slugify(name)
+
+    // Simple uniqueness check could be added here similar to migration script, 
+    // but for now relying on database constraint to fail if duplicate.
+    // In a real app we'd retry with suffix.
+
     let event
     try {
         event = await prisma.event.create({
             data: {
                 name,
+                slug,
                 date: fromZonedTime(date as string, 'America/Mexico_City'),
                 image: image || null,
             },
         })
     } catch (error) {
-        return { message: 'Failed to create event' }
+        console.error("Failed to create event:", error)
+        // Fallback for duplicates - append random suffix
+        try {
+            slug = `${slug}-${Math.floor(Math.random() * 1000)}`
+            event = await prisma.event.create({
+                data: {
+                    name,
+                    slug,
+                    date: fromZonedTime(date as string, 'America/Mexico_City'),
+                    image: image || null,
+                },
+            })
+        } catch (retryError) {
+            return { message: 'Failed to create event' }
+        }
     }
 
     revalidatePath('/admin')
@@ -79,12 +102,15 @@ export async function updateEvent(
     }
 
     const { name, date, image } = validatedFields.data
+    const { slugify } = await import('@/lib/utils')
+    const slug = slugify(name)
 
     try {
         await prisma.event.update({
             where: { id: eventId },
             data: {
                 name,
+                slug, // Update slug when name changes
                 date: fromZonedTime(date as string, 'America/Mexico_City'),
                 image: image || null,
             },

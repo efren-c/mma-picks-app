@@ -15,8 +15,13 @@ export default async function EventPage({ params }: EventPageProps) {
     const { id } = await params
     const session = await auth()
 
-    const event = await prisma.event.findUnique({
-        where: { id },
+    const event = await prisma.event.findFirst({
+        where: {
+            OR: [
+                { id },
+                { slug: id }
+            ]
+        },
         include: {
             fights: {
                 orderBy: { order: 'asc' }

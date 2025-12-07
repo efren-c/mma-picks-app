@@ -10,9 +10,10 @@ interface EventCardProps {
     name: string
     date: Date
     image?: string | null
+    slug?: string | null
 }
 
-export function EventCard({ id, name, date, image }: EventCardProps) {
+export function EventCard({ id, name, date, image, slug }: EventCardProps) {
     const eventDate = new Date(date)
     const now = new Date()
     // Adjust "now" to ensure we capture late night events as "today" even after UTC midnight
@@ -49,7 +50,7 @@ export function EventCard({ id, name, date, image }: EventCardProps) {
     }
 
     return (
-        <Link href={`/events/${id}`}>
+        <Link href={`/events/${slug || id}`}>
             <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

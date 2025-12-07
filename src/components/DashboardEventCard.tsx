@@ -11,6 +11,7 @@ interface DashboardEventCardProps {
         id: string
         name: string
         date: Date
+        slug?: string | null
     }
     picks: Array<{
         id: string
@@ -36,7 +37,7 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <Link href={`/events/${event.id}`} className="hover:text-red-500 transition-colors">
+                        <Link href={`/events/${event.slug || event.id}`} className="hover:text-red-500 transition-colors">
                             <CardTitle className="text-white">{event.name}</CardTitle>
                         </Link>
                         <p className="text-sm text-slate-400 mt-1">
@@ -141,6 +142,6 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                     </motion.div>
                 )}
             </AnimatePresence>
-        </Card>
+        </Card >
     )
 }

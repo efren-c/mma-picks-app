@@ -65,6 +65,7 @@ export default async function Home() {
                   name={event.name}
                   date={event.date}
                   image={event.image}
+                  slug={event.slug}
                 />
               ))}
             </div>
@@ -91,6 +92,7 @@ export default async function Home() {
                   name={event.name}
                   date={event.date}
                   image={event.image}
+                  slug={event.slug}
                 />
               ))}
             </div>
@@ -113,6 +115,7 @@ export default async function Home() {
                   name={event.name}
                   date={event.date}
                   image={event.image}
+                  slug={event.slug}
                 />
               ))}
             </div>

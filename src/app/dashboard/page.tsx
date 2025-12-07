@@ -46,7 +46,10 @@ export default async function DashboardPage() {
         const eventId = pick.fight.event.id
         if (!acc[eventId]) {
             acc[eventId] = {
-                event: pick.fight.event,
+                event: {
+                    ...pick.fight.event,
+                    slug: (pick.fight.event as any).slug // Cast to any if typescript complains temporarily or if type isn't updated yet in prisma client check
+                },
                 picks: [],
                 totalPoints: 0
             }
