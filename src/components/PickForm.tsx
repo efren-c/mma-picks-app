@@ -39,6 +39,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
     const [winner, setWinner] = useState<string | null>(initialUIFormat.winner)
     const [method, setMethod] = useState<string | null>(initialUIFormat.method)
     const [round, setRound] = useState<number | null>(initialUIFormat.round)
+    const [savedPick, setSavedPick] = useState(existingPick)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [hasSubmittedPick, setHasSubmittedPick] = useState(!!existingPick)
 
@@ -49,6 +50,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
             setWinner(uiFormat.winner)
             setMethod(uiFormat.method)
             setRound(uiFormat.round)
+            setSavedPick(existingPick)
             setHasSubmittedPick(true)
         }
     }, [existingPick])
@@ -76,7 +78,13 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
         if (result.error) {
             toast.error(result.error)
         } else {
-            setHasSubmittedPick(true) // Update state immediately after successful submission
+            // Update local saved state to reflect the success immediately
+            setSavedPick({
+                winner: winnerCode,
+                method: methodCode,
+                round: finalRound
+            })
+            setHasSubmittedPick(true)
             toast.success(hasSubmittedPick ? "Pick updated successfully!" : "Pick saved successfully!")
         }
     }
@@ -138,22 +146,22 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
         if (!isSelected) return 'unselected'
 
         // Check if it matches existing pick
-        if (existingPick) {
+        if (savedPick) {
             let isSaved = false
 
             if (type === 'winner') {
                 // Convert database 'A'/'B' to fighter name for comparison
-                const savedWinner = existingPick.winner === 'A' ? fighterA : fighterB
+                const savedWinner = savedPick.winner === 'A' ? fighterA : fighterB
                 isSaved = savedWinner === value
             } else if (type === 'method') {
                 // Convert database code to UI label for comparison
-                const savedMethod = existingPick.method === 'KO' ? 'KO/TKO'
-                    : existingPick.method === 'SUB' ? 'Submission'
+                const savedMethod = savedPick.method === 'KO' ? 'KO/TKO'
+                    : savedPick.method === 'SUB' ? 'Submission'
                         : 'Decision'
                 isSaved = savedMethod === value
             } else {
                 // Round is stored the same way
-                isSaved = existingPick.round === value
+                isSaved = savedPick.round === value
             }
 
             if (isSaved) return 'saved'
@@ -174,7 +182,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
 
             <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                    <span className={`w-1 h-3 rounded-full ${existingPick?.winner === winner ? 'bg-green-500' : 'bg-red-600'}`}></span>
+                    <span className={`w-1 h-3 rounded-full ${savedPick?.winner === (winner === fighterA ? 'A' : 'B') ? 'bg-green-500' : 'bg-red-600'}`}></span>
                     Who wins?
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -216,7 +224,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                 >
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <span className={`w-1 h-3 rounded-full ${existingPick?.method === method ? 'bg-green-500' : 'bg-red-600'}`}></span>
+                            <span className={`w-1 h-3 rounded-full ${savedPick?.method === (method === 'KO/TKO' ? 'KO' : method === 'Submission' ? 'SUB' : 'DEC') ? 'bg-green-500' : 'bg-red-600'}`}></span>
                             Method
                         </label>
                         <div className="grid grid-cols-3 gap-2">
@@ -254,7 +262,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                             className="space-y-2"
                         >
                             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                <span className={`w-1 h-3 rounded-full ${existingPick?.round === round ? 'bg-green-500' : 'bg-red-600'}`}></span>
+                                <span className={`w-1 h-3 rounded-full ${savedPick?.round === round ? 'bg-green-500' : 'bg-red-600'}`}></span>
                                 Round
                             </label>
                             <div className="flex flex-wrap gap-2">
@@ -294,7 +302,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                                         : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 shadow-green-900/20 text-white'
                                     }`}
                             >
-                                {isSubmitting ? "Saving..." : userHasChanges() ? (existingPick ? "Update Pick" : "Submit Pick") : "Pick Saved"}
+                                {isSubmitting ? "Saving..." : userHasChanges() ? (savedPick ? "Update Pick" : "Submit Pick") : "Pick Saved"}
                             </button>
                         </div>
                     )}
@@ -304,20 +312,20 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
     )
 
     function userHasChanges() {
-        if (!existingPick) return true
+        if (!savedPick) return true
 
         // Convert database winner to UI format for comparison
-        const savedWinner = existingPick.winner === 'A' ? fighterA : fighterB
+        const savedWinner = savedPick.winner === 'A' ? fighterA : fighterB
         if (savedWinner !== winner) return true
 
         // Convert database method to UI format for comparison
-        const savedMethod = existingPick.method === 'KO' ? 'KO/TKO'
-            : existingPick.method === 'SUB' ? 'Submission'
+        const savedMethod = savedPick.method === 'KO' ? 'KO/TKO'
+            : savedPick.method === 'SUB' ? 'Submission'
                 : 'Decision'
         if (savedMethod !== method) return true
 
         // Round comparison (no conversion needed)
-        if (existingPick.method !== 'DEC' && existingPick.round !== round) return true
+        if (savedPick.method !== 'DEC' && savedPick.round !== round) return true
 
         return false
     }
