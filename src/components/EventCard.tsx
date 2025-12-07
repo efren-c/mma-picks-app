@@ -17,7 +17,7 @@ export function EventCard({ id, name, date, image, slug }: EventCardProps) {
     const eventDate = new Date(date)
     const now = new Date()
     // Adjust "now" to ensure we capture late night events as "today" even after UTC midnight
-    const adjustedNow = new Date(now.getTime() - 12 * 60 * 60 * 1000)
+    const adjustedNow = new Date(now.getTime() - 4 * 60 * 60 * 1000)
     const todayStart = new Date(adjustedNow.getFullYear(), adjustedNow.getMonth(), adjustedNow.getDate())
 
     let status: 'UPCOMING' | 'LIVE' | 'PAST' = 'UPCOMING'

@@ -16,8 +16,8 @@ export default async function Home() {
   // Filter events into today and upcoming
   const now = new Date()
   // Adjust "now" to ensure we capture late night events as "today" even after UTC midnight
-  // Subtracting 12 hours keeps us in the "previous day" relative to UTC until noon UTC next day.
-  const adjustedNow = new Date(now.getTime() - 12 * 60 * 60 * 1000)
+  // Subtracting 2 hours keeps us in the "previous day" relative to UTC until 2 AM local time.
+  const adjustedNow = new Date(now.getTime() - 2 * 60 * 60 * 1000)
 
   const todayStart = new Date(adjustedNow.getFullYear(), adjustedNow.getMonth(), adjustedNow.getDate())
   const todayEnd = new Date(adjustedNow.getFullYear(), adjustedNow.getMonth(), adjustedNow.getDate(), 23, 59, 59)
