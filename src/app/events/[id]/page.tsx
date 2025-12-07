@@ -62,6 +62,14 @@ export default async function EventPage({ params }: EventPageProps) {
         }
     }
 
+    // Calculate if event is completed (same logic as EventCard)
+    const eventDate = new Date(event.date)
+    const now = new Date()
+    // Adjust "now" to ensure we capture late night events as "today" even after UTC midnight
+    const adjustedNow = new Date(now.getTime() - 4 * 60 * 60 * 1000)
+    const todayStart = new Date(adjustedNow.getFullYear(), adjustedNow.getMonth(), adjustedNow.getDate())
+    const isEventCompleted = eventDate < todayStart
+
     return (
         <main className="min-h-screen bg-slate-950 p-8">
             <div className="max-w-4xl mx-auto space-y-8">
@@ -126,6 +134,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                 fight={fight}
                                 userPick={userPicks.get(fight.id)}
                                 eventDate={event.date}
+                                isEventCompleted={isEventCompleted}
                             />
                         ))}
                     </div>

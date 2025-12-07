@@ -17,9 +17,10 @@ interface PickFormProps {
         round: number
     } | null
     isLocked?: boolean
+    isEventCompleted?: boolean
 }
 
-export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existingPick, isLocked = false }: PickFormProps) {
+export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existingPick, isLocked = false, isEventCompleted = false }: PickFormProps) {
     // Helper function to convert database format to UI format
     const convertPickToUIFormat = (pick: typeof existingPick) => {
         if (!pick) return { winner: null, method: null, round: null }
@@ -163,7 +164,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
 
     return (
         <div className="space-y-4">
-            {isLocked && (
+            {isLocked && !isEventCompleted && (
                 <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-3 mb-4">
                     <p className="text-yellow-400 text-sm font-medium">
                         🔒 Event has started. Picks are locked.

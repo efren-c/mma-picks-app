@@ -25,9 +25,10 @@ interface FightRowProps {
         points: number | null
     } | null
     eventDate: Date
+    isEventCompleted?: boolean
 }
 
-export function FightRow({ fight, userPick: initialUserPick, eventDate }: FightRowProps) {
+export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventCompleted = false }: FightRowProps) {
     const [isExpanded, setIsExpanded] = useState(false)
     const [existingPick, setExistingPick] = useState<any>(initialUserPick || null)
     const [isLoading, setIsLoading] = useState(false)
@@ -182,6 +183,7 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate }: FightR
                                     scheduledRounds={fight.scheduledRounds}
                                     existingPick={existingPick}
                                     isLocked={isLocked}
+                                    isEventCompleted={isEventCompleted}
                                 />
                             )}
                         </div>
