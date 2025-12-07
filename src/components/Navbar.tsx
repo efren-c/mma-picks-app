@@ -40,6 +40,11 @@ export async function Navbar() {
                                         Dashboard
                                     </Button>
                                 </Link>
+                                <Link href="/leaderboard" className="md:hidden">
+                                    <Button variant="ghost" size="sm" className="text-slate-200 hover:text-white font-medium">
+                                        Leaderboard
+                                    </Button>
+                                </Link>
                                 {isAdmin && (
                                     <Link href="/admin">
                                         <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 font-medium">
@@ -47,7 +52,7 @@ export async function Navbar() {
                                         </Button>
                                     </Link>
                                 )}
-                                <span className="text-sm text-slate-400">
+                                <span className="text-sm text-slate-400 hidden md:inline">
                                     {username}
                                 </span>
                                 <form
