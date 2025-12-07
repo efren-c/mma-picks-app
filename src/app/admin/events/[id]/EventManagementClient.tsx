@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState, useEffect } from "react"
+import { useFormStatus } from "react-dom"
 import { createFight, updateFightResult, deleteFight, updateEvent, deleteEvent, updateFight } from "@/app/lib/admin-actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,6 +25,26 @@ interface Event {
     date: Date
     image: string | null
     fights: Fight[]
+}
+
+function SubmitButton({ children, className, ...props }: React.ComponentProps<typeof Button>) {
+    const { pending } = useFormStatus()
+
+    return (
+        <Button
+            type="submit"
+            disabled={pending}
+            className={className}
+            {...props}
+        >
+            {pending ? (
+                <>
+                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Saving...
+                </>
+            ) : children}
+        </Button>
+    )
 }
 
 function AddFightForm({ eventId }: { eventId: string }) {
@@ -172,9 +193,9 @@ function FightResultForm({ fight, eventId }: { fight: Fight; eventId: string }) 
                 </div>
             )}
 
-            <Button type="submit" size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white">
+            <SubmitButton size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white">
                 {fight.winner ? 'Update Result' : 'Set Result'}
-            </Button>
+            </SubmitButton>
         </form>
     )
 }
