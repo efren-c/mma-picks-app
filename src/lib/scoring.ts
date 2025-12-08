@@ -52,24 +52,24 @@ export function calculatePickScore(pick: Pick, result: FightResult): number {
     if (pickMethod === resultMethod) {
         // For Decision, there's no round to predict, so max is 3 points
         if (resultMethod === 'DEC') {
-            return 3
+            return 5
         }
 
         // For KO/SUB, check if round also matches
         if (pick.round === result.round) {
-            return 5 // Perfect pick: winner + method + round
+            return 10 // Perfect pick: winner + method + round
         }
 
-        return 3 // Correct winner + method, wrong round
+        return 5 // Correct winner + method, wrong round
     }
 
     // Wrong method, but check if round is correct (only for non-Decision results)
     if (resultMethod !== 'DEC' && pick.round === result.round) {
-        return 3 // Correct winner + round, wrong method
+        return 7 // Correct winner + round, wrong method
     }
 
     // Correct winner only
-    return 1
+    return 2
 }
 
 /**
