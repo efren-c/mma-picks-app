@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma"
 import { EventCard } from "@/components/EventCard"
+import { getDictionary } from "@/lib/i18n"
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
+  const dict = await getDictionary()
   const events = await prisma.event.findMany({
     orderBy: { date: 'asc' },
     where: {
@@ -45,7 +47,7 @@ export default async function Home() {
             MMA <span className="text-red-600">Picks</span>
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl">
-            Predict fight outcomes, compete with friends, and climb the leaderboard.
+            {dict.home.title}
           </p>
         </header>
 
@@ -54,7 +56,7 @@ export default async function Home() {
           <section>
             <h2 className="text-2xl font-semibold text-white mb-6 flex items-center">
               <span className="bg-green-600 w-1 h-8 mr-3 rounded-full"></span>
-              Today's Events
+              {dict.home.todaysEvents}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -76,12 +78,12 @@ export default async function Home() {
         <section>
           <h2 className="text-2xl font-semibold text-white mb-6 flex items-center">
             <span className="bg-blue-600 w-1 h-8 mr-3 rounded-full"></span>
-            Upcoming Events
+            {dict.home.upcomingEvents}
           </h2>
 
           {upcomingEvents.length === 0 ? (
             <div className="text-center py-20 text-slate-500">
-              No upcoming events found. Check back later!
+              {dict.home.noUpcoming}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -104,7 +106,7 @@ export default async function Home() {
           <section>
             <h2 className="text-2xl font-semibold text-slate-400 mb-6 flex items-center">
               <span className="bg-slate-600 w-1 h-8 mr-3 rounded-full"></span>
-              Past Events
+              {dict.home.pastEvents}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

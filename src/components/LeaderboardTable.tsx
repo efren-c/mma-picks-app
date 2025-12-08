@@ -29,16 +29,16 @@ interface LeaderboardTableProps {
     currentUserId?: string;
 }
 
-export function LeaderboardTable({ users, currentUserId }: LeaderboardTableProps) {
+export function LeaderboardTable({ users, currentUserId, dict }: LeaderboardTableProps & { dict: any }) {
     return (
         <div className="rounded-xl border border-slate-800 overflow-hidden">
             <Table>
                 <TableHeader className="bg-slate-950/50">
                     <TableRow className="hover:bg-transparent border-slate-800">
-                        <TableHead className="w-[80px] text-slate-400">Rank</TableHead>
-                        <TableHead className="text-slate-400">User</TableHead>
-                        <TableHead className="text-slate-400">Points</TableHead>
-                        <TableHead className="text-right text-slate-400">Badges</TableHead>
+                        <TableHead className="w-[80px] text-slate-400">{dict.leaderboard.rank}</TableHead>
+                        <TableHead className="text-slate-400">{dict.leaderboard.user}</TableHead>
+                        <TableHead className="text-slate-400">{dict.leaderboard.points}</TableHead>
+                        <TableHead className="text-right text-slate-400">{dict.leaderboard.badges}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -73,7 +73,7 @@ export function LeaderboardTable({ users, currentUserId }: LeaderboardTableProps
                                         </span>
                                         {isCurrentUser && (
                                             <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/30">
-                                                YOU
+                                                {dict.leaderboard.you}
                                             </span>
                                         )}
                                     </div>

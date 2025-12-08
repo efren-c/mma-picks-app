@@ -26,9 +26,10 @@ interface FightRowProps {
     } | null
     eventDate: Date
     isEventCompleted?: boolean
+    dict: any // Type this properly if possible, or use explicit interface
 }
 
-export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventCompleted = false }: FightRowProps) {
+export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventCompleted = false, dict }: FightRowProps) {
     const [isExpanded, setIsExpanded] = useState(false)
     const [existingPick, setExistingPick] = useState<any>(initialUserPick || null)
     const [isLoading, setIsLoading] = useState(false)
@@ -79,8 +80,8 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
     const formatMethod = (method: string | null) => {
         if (!method) return ''
         if (method === 'KO') return 'KO/TKO'
-        if (method === 'SUB') return 'Submission'
-        if (method === 'DEC') return 'Decision'
+        if (method === 'SUB') return dict.pickForm.submission
+        if (method === 'DEC') return dict.pickForm.decision
         return method
     }
 
@@ -139,8 +140,8 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
                 <div className="flex items-center text-slate-400">
                     <span className="mr-4 text-sm hidden sm:inline-block">
                         {isLocked
-                            ? (existingPick ? "View Pick" : "Locked")
-                            : (existingPick ? "Edit Pick" : "Make Pick")
+                            ? (existingPick ? "View Pick" : dict.fightRow.locked)
+                            : (existingPick ? dict.pickForm.updatePick : dict.fightRow.makePick)
                         }
                     </span>
                     <motion.div
@@ -164,10 +165,10 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
                             {/* Fight Result Display */}
                             {hasFightResult && (
                                 <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-                                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">Official Result</p>
+                                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">{dict.fightRow.officialResult}</p>
                                     <p className="text-white font-semibold">
-                                        {getWinnerName(fight.winner)} wins via {formatMethod(fight.method)}
-                                        {fight.method !== 'DEC' && fight.round && ` (Round ${fight.round})`}
+                                        {getWinnerName(fight.winner)} {dict.fightRow.winsVia} {formatMethod(fight.method)}
+                                        {fight.method !== 'DEC' && fight.round && ` (${dict.fightRow.round} ${fight.round})`}
                                     </p>
                                 </div>
                             )}
@@ -184,6 +185,7 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
                                     existingPick={existingPick}
                                     isLocked={isLocked}
                                     isEventCompleted={isEventCompleted}
+                                    dict={dict}
                                 />
                             )}
                         </div>

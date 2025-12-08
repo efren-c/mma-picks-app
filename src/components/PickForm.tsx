@@ -18,42 +18,29 @@ interface PickFormProps {
     } | null
     isLocked?: boolean
     isEventCompleted?: boolean
+    dict: any
 }
 
-export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existingPick, isLocked = false, isEventCompleted = false }: PickFormProps) {
-    // Helper function to convert database format to UI format
-    const convertPickToUIFormat = (pick: typeof existingPick) => {
-        if (!pick) return { winner: null, method: null, round: null }
+export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existingPick, isLocked = false, isEventCompleted = false, dict }: PickFormProps) {
 
-        return {
-            winner: pick.winner === 'A' ? fighterA : fighterB,
-            method: pick.method === 'KO' ? 'KO/TKO'
-                : pick.method === 'SUB' ? 'Submission'
-                    : 'Decision',
-            round: pick.round
-        }
-    }
-
-    const initialUIFormat = convertPickToUIFormat(existingPick)
-
-    const [winner, setWinner] = useState<string | null>(initialUIFormat.winner)
-    const [method, setMethod] = useState<string | null>(initialUIFormat.method)
-    const [round, setRound] = useState<number | null>(initialUIFormat.round)
+    // State now uses DB codes directly: 'A'/'B' for winner, 'KO'/'SUB'/'DEC' for method
+    // This avoids complex two-way binding of translated strings
+    const [winner, setWinner] = useState<string | null>(existingPick?.winner === 'A' ? fighterA : existingPick?.winner === 'B' ? fighterB : null)
+    const [method, setMethod] = useState<string | null>(existingPick?.method || null)
+    const [round, setRound] = useState<number | null>(existingPick?.round || null)
     const [savedPick, setSavedPick] = useState(existingPick)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [hasSubmittedPick, setHasSubmittedPick] = useState(!!existingPick)
 
-    // Update form when existingPick changes
     useEffect(() => {
         if (existingPick) {
-            const uiFormat = convertPickToUIFormat(existingPick)
-            setWinner(uiFormat.winner)
-            setMethod(uiFormat.method)
-            setRound(uiFormat.round)
+            setWinner(existingPick.winner === 'A' ? fighterA : fighterB)
+            setMethod(existingPick.method)
+            setRound(existingPick.round)
             setSavedPick(existingPick)
             setHasSubmittedPick(true)
         }
-    }, [existingPick])
+    }, [existingPick, fighterA, fighterB])
 
     const handleSubmit = async () => {
         if (!winner || !method || isLocked) return
@@ -63,15 +50,10 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
         // Convert fighter name to 'A' or 'B'
         const winnerCode = winner === fighterA ? 'A' : 'B'
 
-        // Convert method from UI format to database format
-        const methodCode = method === 'KO/TKO' ? 'KO'
-            : method === 'Submission' ? 'SUB'
-                : 'DEC'
-
         // Default round to 0 if not applicable (e.g. Decision)
-        const finalRound = (method === 'Decision') ? 0 : (round || 0)
+        const finalRound = (method === 'DEC') ? 0 : (round || 0)
 
-        const result = await submitPick(fightId, winnerCode, methodCode, finalRound)
+        const result = await submitPick(fightId, winnerCode, method, finalRound)
 
         setIsSubmitting(false)
 
@@ -81,11 +63,11 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
             // Update local saved state to reflect the success immediately
             setSavedPick({
                 winner: winnerCode,
-                method: methodCode,
+                method: method,
                 round: finalRound
             })
             setHasSubmittedPick(true)
-            toast.success(hasSubmittedPick ? "Pick updated successfully!" : "Pick saved successfully!")
+            toast.success(hasSubmittedPick ? dict.pickForm.pickUpdated : dict.pickForm.pickSavedSuccess)
         }
     }
 
@@ -100,16 +82,11 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
 
     const BeltIcon = () => (
         <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-            {/* Knot */}
             <path d="M10,10 C10,9 14,9 14,10 C14,11 10,11 10,10 Z" />
-            {/* Left side of belt */}
             <path d="M2,11 L10,11 L10,13 L2,13 Z" />
-            {/* Right side of belt */}
             <path d="M14,11 L22,11 L22,13 L14,13 Z" />
-            {/* Hanging ends */}
             <path d="M11,13 L10,18 L8,17 L9,12 Z" />
             <path d="M13,13 L14,18 L16,17 L15,12 Z" />
-            {/* Rank bar on right end */}
             <rect x="19" y="11" width="3" height="2" fill="white" fillOpacity="0.3" />
         </svg>
     )
@@ -129,12 +106,21 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
         </svg>
     )
 
-    const getMethodIcon = (methodName: string) => {
-        switch (methodName) {
-            case 'KO/TKO': return <FistIcon />
-            case 'Submission': return <BeltIcon />
-            case 'Decision': return <ScorecardIcon />
+    const getMethodIcon = (methodCode: string) => {
+        switch (methodCode) {
+            case 'KO': return <FistIcon />
+            case 'SUB': return <BeltIcon />
+            case 'DEC': return <ScorecardIcon />
             default: return null
+        }
+    }
+
+    const getMethodLabel = (methodCode: string) => {
+        switch (methodCode) {
+            case 'KO': return 'KO/TKO'
+            case 'SUB': return dict.pickForm.submission
+            case 'DEC': return dict.pickForm.decision
+            default: return methodCode
         }
     }
 
@@ -145,22 +131,15 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
 
         if (!isSelected) return 'unselected'
 
-        // Check if it matches existing pick
         if (savedPick) {
             let isSaved = false
 
             if (type === 'winner') {
-                // Convert database 'A'/'B' to fighter name for comparison
                 const savedWinner = savedPick.winner === 'A' ? fighterA : fighterB
                 isSaved = savedWinner === value
             } else if (type === 'method') {
-                // Convert database code to UI label for comparison
-                const savedMethod = savedPick.method === 'KO' ? 'KO/TKO'
-                    : savedPick.method === 'SUB' ? 'Submission'
-                        : 'Decision'
-                isSaved = savedMethod === value
+                isSaved = savedPick.method === value
             } else {
-                // Round is stored the same way
                 isSaved = savedPick.round === value
             }
 
@@ -175,7 +154,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
             {isLocked && !isEventCompleted && (
                 <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-3 mb-4">
                     <p className="text-yellow-400 text-sm font-medium">
-                        🔒 Event has started. Picks are locked.
+                        🔒 {dict.pickForm.lockedMessage}
                     </p>
                 </div>
             )}
@@ -183,7 +162,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
             <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                     <span className={`w-1 h-3 rounded-full ${savedPick?.winner === (winner === fighterA ? 'A' : 'B') ? 'bg-green-500' : 'bg-red-600'}`}></span>
-                    Who wins?
+                    {dict.pickForm.whoWins}
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                     {[fighterA, fighterB].map((fighter) => {
@@ -224,11 +203,11 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                 >
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <span className={`w-1 h-3 rounded-full ${savedPick?.method === (method === 'KO/TKO' ? 'KO' : method === 'Submission' ? 'SUB' : 'DEC') ? 'bg-green-500' : 'bg-red-600'}`}></span>
-                            Method
+                            <span className={`w-1 h-3 rounded-full ${savedPick?.method === method ? 'bg-green-500' : 'bg-red-600'}`}></span>
+                            {dict.pickForm.method}
                         </label>
                         <div className="grid grid-cols-3 gap-2">
-                            {['KO/TKO', 'Submission', 'Decision'].map((m) => {
+                            {['KO', 'SUB', 'DEC'].map((m) => {
                                 const status = getSelectionStatus('method', m)
                                 return (
                                     <button
@@ -248,14 +227,14 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                                         <div className={`p-1.5 rounded-full ${status !== 'unselected' ? 'bg-white/20' : 'bg-slate-900/50'}`}>
                                             {getMethodIcon(m)}
                                         </div>
-                                        <span className="text-[10px] font-bold uppercase tracking-wide">{m}</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wide">{getMethodLabel(m)}</span>
                                     </button>
                                 )
                             })}
                         </div>
                     </div>
 
-                    {method && method !== 'Decision' && (
+                    {method && method !== 'DEC' && (
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -263,7 +242,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                         >
                             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                 <span className={`w-1 h-3 rounded-full ${savedPick?.round === round ? 'bg-green-500' : 'bg-red-600'}`}></span>
-                                Round
+                                {dict.pickForm.round}
                             </label>
                             <div className="flex flex-wrap gap-2">
                                 {Array.from({ length: scheduledRounds }, (_, i) => i + 1).map((r) => {
@@ -295,14 +274,14 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                         <div className="pt-2">
                             <button
                                 onClick={handleSubmit}
-                                disabled={!winner || !method || (method !== 'Decision' && !round) || isSubmitting}
+                                disabled={!winner || !method || (method !== 'DEC' && !round) || isSubmitting}
                                 className={`w-full py-3 font-bold uppercase tracking-widest rounded-lg transition-all shadow-md active:scale-[0.98] text-sm disabled:opacity-50 disabled:cursor-not-allowed
                                 ${userHasChanges()
                                         ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 shadow-red-900/20 text-white'
                                         : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 shadow-green-900/20 text-white'
                                     }`}
                             >
-                                {isSubmitting ? "Saving..." : userHasChanges() ? (savedPick ? "Update Pick" : "Submit Pick") : "Pick Saved"}
+                                {isSubmitting ? dict.pickForm.saving : userHasChanges() ? (savedPick ? dict.pickForm.updatePick : dict.pickForm.submitPick) : dict.pickForm.pickSaved}
                             </button>
                         </div>
                     )}
@@ -314,17 +293,12 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
     function userHasChanges() {
         if (!savedPick) return true
 
-        // Convert database winner to UI format for comparison
         const savedWinner = savedPick.winner === 'A' ? fighterA : fighterB
         if (savedWinner !== winner) return true
 
-        // Convert database method to UI format for comparison
-        const savedMethod = savedPick.method === 'KO' ? 'KO/TKO'
-            : savedPick.method === 'SUB' ? 'Submission'
-                : 'Decision'
-        if (savedMethod !== method) return true
+        // Method is now stored as code in both, simple comparison
+        if (savedPick.method !== method) return true
 
-        // Round comparison (no conversion needed)
         if (savedPick.method !== 'DEC' && savedPick.round !== round) return true
 
         return false

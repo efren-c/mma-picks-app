@@ -6,9 +6,11 @@ import { Trophy, History, Check, X, LockKeyhole, HandFist, Medal } from "lucide-
 import { DashboardEventCard } from "@/components/DashboardEventCard"
 import { Badge } from "@/components/Badge"
 import { getGlobalLeaderboard } from "@/app/lib/gamification-actions"
+import { getDictionary } from "@/lib/i18n"
 
 export default async function DashboardPage() {
     const session = await auth()
+    const dict = await getDictionary()
 
     if (!session?.user?.email) {
         redirect("/login")
@@ -70,13 +72,13 @@ export default async function DashboardPage() {
     return (
         <main className="min-h-screen bg-slate-950 p-8">
             <div className="max-w-4xl mx-auto space-y-8">
-                <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+                <h1 className="text-3xl font-bold text-white">{dict.dashboard.title}</h1>
 
                 {/* Stats Overview */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card className="bg-slate-900/50 border-slate-800">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4">
-                            <CardTitle className="text-xs font-medium text-slate-400">Total Points</CardTitle>
+                            <CardTitle className="text-xs font-medium text-slate-400">{dict.dashboard.totalPoints}</CardTitle>
                             <Trophy className="h-3 w-3 text-yellow-500" />
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
@@ -85,7 +87,7 @@ export default async function DashboardPage() {
                     </Card>
                     <Card className="bg-slate-900/50 border-slate-800">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4">
-                            <CardTitle className="text-xs font-medium text-slate-400">Total Picks</CardTitle>
+                            <CardTitle className="text-xs font-medium text-slate-400">{dict.dashboard.totalPicks}</CardTitle>
                             <LockKeyhole className="h-3 w-3 text-blue-500" />
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
@@ -94,7 +96,7 @@ export default async function DashboardPage() {
                     </Card>
                     <Card className="bg-slate-900/50 border-slate-800">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4">
-                            <CardTitle className="text-xs font-medium text-slate-400">Events</CardTitle>
+                            <CardTitle className="text-xs font-medium text-slate-400">{dict.dashboard.events}</CardTitle>
                             <HandFist className="h-3 w-3 text-orange-400" />
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
@@ -103,7 +105,7 @@ export default async function DashboardPage() {
                     </Card>
                     <Card className="bg-slate-900/50 border-slate-800">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4">
-                            <CardTitle className="text-xs font-medium text-slate-400">Rank</CardTitle>
+                            <CardTitle className="text-xs font-medium text-slate-400">{dict.dashboard.rank}</CardTitle>
                             <Medal className="h-3 w-3 text-purple-500" />
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
@@ -114,9 +116,9 @@ export default async function DashboardPage() {
 
                 {/* Badges Section */}
                 <div className="space-y-4">
-                    <h2 className="text-xl font-semibold text-white">Badges</h2>
+                    <h2 className="text-xl font-semibold text-white">{dict.dashboard.badges}</h2>
                     {user.badges.length === 0 ? (
-                        <div className="text-slate-500">No badges earned yet.</div>
+                        <div className="text-slate-500">{dict.dashboard.noBadges}</div>
                     ) : (
                         <div className="flex flex-wrap gap-4">
                             {user.badges.map((ub) => (
@@ -134,9 +136,9 @@ export default async function DashboardPage() {
 
                 {/* Events with Picks */}
                 <div className="space-y-6">
-                    <h2 className="text-xl font-semibold text-white">Pick History by Event</h2>
+                    <h2 className="text-xl font-semibold text-white">{dict.dashboard.pickHistory}</h2>
                     {events.length === 0 ? (
-                        <div className="text-slate-500">No picks made yet.</div>
+                        <div className="text-slate-500">{dict.dashboard.noPicks}</div>
                     ) : (
                         events.map(({ event, picks, totalPoints }) => (
                             <DashboardEventCard
@@ -144,6 +146,7 @@ export default async function DashboardPage() {
                                 event={event}
                                 picks={picks}
                                 totalPoints={totalPoints}
+                                dict={dict}
                             />
                         ))
                     )}

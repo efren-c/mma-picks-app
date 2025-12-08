@@ -13,7 +13,7 @@ interface EventSelectorProps {
     selectedEventId?: string
 }
 
-export function EventSelector({ events, selectedEventId }: EventSelectorProps) {
+export function EventSelector({ events, selectedEventId, dict }: EventSelectorProps & { dict: any }) {
     const router = useRouter()
 
     const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -38,7 +38,7 @@ export function EventSelector({ events, selectedEventId }: EventSelectorProps) {
                     backgroundSize: "0.65em auto",
                 }}
             >
-                <option value="">Global Leaderboard</option>
+                <option value="">{dict.leaderboard.globalTitle}</option>
                 {events.map(event => (
                     <option key={event.id} value={event.id}>
                         {event.name}

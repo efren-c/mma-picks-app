@@ -5,9 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getDictionary } from "@/lib/i18n";
 
 export default async function LeaderboardPage(props: { searchParams: Promise<{ eventId?: string }> }) {
     const searchParams = await props.searchParams;
+    const dict = await getDictionary();
     const events = await prisma.event.findMany({
         select: { id: true, name: true, date: true },
         orderBy: { date: 'desc' }
@@ -29,15 +31,15 @@ export default async function LeaderboardPage(props: { searchParams: Promise<{ e
     }
 
     let leaderboard;
-    let title = "Global Leaderboard";
-    let description = "Top players across all events";
+    let title: string = dict.leaderboard.globalTitle;
+    let description: string = dict.leaderboard.globalDescription;
 
     if (targetEventId) {
         leaderboard = await getEventLeaderboard(targetEventId);
         const event = events.find(e => e.id === targetEventId);
         if (event) {
-            title = `${event.name} Leaderboard`;
-            description = `Top players for ${event.name}`;
+            title = `${dict.leaderboard.titleSuffix}`;
+            description = `${dict.leaderboard.eventDescription} ${event.name}`;
         }
     } else {
         leaderboard = await getGlobalLeaderboard();
@@ -57,7 +59,7 @@ export default async function LeaderboardPage(props: { searchParams: Promise<{ e
     return (
         <div className="container mx-auto py-8 max-w-4xl space-y-6">
             <div className="flex justify-end">
-                <EventSelector events={events} selectedEventId={targetEventId} />
+                <EventSelector events={events} selectedEventId={targetEventId} dict={dict} />
             </div>
 
             <Card className="bg-slate-900/50 border-slate-800">
@@ -70,7 +72,7 @@ export default async function LeaderboardPage(props: { searchParams: Promise<{ e
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <LeaderboardTable users={leaderboard} currentUserId={currentUserId} />
+                    <LeaderboardTable users={leaderboard} currentUserId={currentUserId} dict={dict} />
                 </CardContent>
             </Card>
         </div>

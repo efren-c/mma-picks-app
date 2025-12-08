@@ -29,7 +29,7 @@ interface DashboardEventCardProps {
     totalPoints: number
 }
 
-export function DashboardEventCard({ event, picks, totalPoints }: DashboardEventCardProps) {
+export function DashboardEventCard({ event, picks, totalPoints, dict }: DashboardEventCardProps & { dict: any }) {
     const [isExpanded, setIsExpanded] = useState(false)
 
     return (
@@ -49,8 +49,8 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                         onClick={() => setIsExpanded(!isExpanded)}
                     >
                         <div className="text-right">
-                            <p className="text-sm text-slate-400">Event Score</p>
-                            <p className="text-2xl font-bold text-green-400">{totalPoints} pts</p>
+                            <p className="text-sm text-slate-400">{dict.dashboardEventCard.eventScore}</p>
+                            <p className="text-2xl font-bold text-green-400">{totalPoints} {dict.dashboardEventCard.pts}</p>
                         </div>
                         <motion.div
                             animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -108,10 +108,10 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                                                         {pick.fight.fighterA} vs {pick.fight.fighterB}
                                                     </div>
                                                     <div className="text-xs text-slate-400 mt-1">
-                                                        Your pick: <span className="font-semibold text-red-400">
+                                                        {dict.dashboardEventCard.yourPick} <span className="font-semibold text-red-400">
                                                             {pick.winner === 'A' ? pick.fight.fighterA : pick.fight.fighterB}
-                                                        </span> via {pick.method === 'KO' ? 'KO/TKO' : pick.method === 'SUB' ? 'Submission' : 'Decision'}
-                                                        {pick.method !== 'DEC' && ` (R${pick.round})`}
+                                                        </span> {dict.dashboardEventCard.via} {pick.method === 'KO' ? 'KO/TKO' : pick.method === 'SUB' ? dict.pickForm.submission : dict.pickForm.decision}
+                                                        {pick.method !== 'DEC' && ` (${dict.fightRow.round} ${pick.round})`}
                                                     </div>
                                                 </div>
                                                 {hasFightResult && (
@@ -120,14 +120,14 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                                                             <>
                                                                 <Check className="w-4 h-4 text-green-400" />
                                                                 <span className="text-sm font-bold text-green-400">
-                                                                    +{pick.points || 0} pts
+                                                                    +{pick.points || 0} {dict.dashboardEventCard.pts}
                                                                 </span>
                                                             </>
                                                         ) : (
                                                             <>
                                                                 <X className="w-4 h-4 text-red-400" />
                                                                 <span className="text-sm font-bold text-red-400">
-                                                                    0 pts
+                                                                    0 {dict.dashboardEventCard.pts}
                                                                 </span>
                                                             </>
                                                         )}

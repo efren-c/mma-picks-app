@@ -4,6 +4,7 @@ import { Calendar, Clock, Trophy } from "lucide-react"
 import { FightRow } from "@/components/FightRow"
 import { auth } from "@/auth"
 import { Card } from "@/components/ui/card"
+import { getDictionary } from "@/lib/i18n"
 
 interface EventPageProps {
     params: Promise<{
@@ -14,6 +15,7 @@ interface EventPageProps {
 export default async function EventPage({ params }: EventPageProps) {
     const { id } = await params
     const session = await auth()
+    const dict = await getDictionary()
 
     const event = await prisma.event.findFirst({
         where: {
@@ -131,7 +133,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 <div className="space-y-4">
                     <h2 className="text-2xl font-semibold text-white flex items-center">
                         <span className="bg-red-600 w-1 h-8 mr-3 rounded-full"></span>
-                        Fight Card
+                        {dict.eventPage.card}
                     </h2>
 
                     <div className="space-y-3">
@@ -142,6 +144,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                 userPick={userPicks.get(fight.id)}
                                 eventDate={event.date}
                                 isEventCompleted={isEventCompleted}
+                                dict={dict}
                             />
                         ))}
                     </div>
