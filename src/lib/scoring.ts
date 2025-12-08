@@ -2,14 +2,11 @@
  * Scoring logic for MMA picks
  * 
  * Scoring Rules:
- * - Correct Winner only: 1 point
- * - Correct Winner + Method: 2 points
- * - Correct Winner + Round: 3 points
- * - Correct Winner + DEC: 3 points
- * - Correct Winner + Method + Round (for KO/SUB): 5 points
+ * - Winner Only: 2 points
+ * - Winner + Method (inc. Decision): 5 points (2 + 3)
+ * - Winner + Round (wrong method): 7 points (2 + 5)
+ * - Perfect Pick (Winner + Method + Round): 10 points (2 + 3 + 5)
  * - Incorrect Winner: 0 points
- * 
- * Note: Decision picks have no round component, so max is 3 points
  */
 
 import { prisma } from "@/lib/prisma"
@@ -48,29 +45,26 @@ export function calculatePickScore(pick: Pick, result: FightResult): number {
         return 0
     }
 
-    // Correct winner + method
+    let points = 2 // Base points for correct winner
+
+    // Method Bonus: +3 points
     if (pickMethod === resultMethod) {
-        // For Decision, there's no round to predict, so max is 3 points
-        if (resultMethod === 'DEC') {
-            return 5
-        }
+        points += 3
+    }
 
-        // For KO/SUB, check if round also matches
+    // Round Bonus: +5 points
+    // Only applies if the fight was NOT a decision (since decisions have no round component)
+    if (resultMethod !== 'DEC') {
         if (pick.round === result.round) {
-            return 10 // Perfect pick: winner + method + round
+            points += 5
         }
-
-        return 5 // Correct winner + method, wrong round
     }
 
-    // Wrong method, but check if round is correct (only for non-Decision results)
-    if (resultMethod !== 'DEC' && pick.round === result.round) {
-        return 7 // Correct winner + round, wrong method
-    }
+    return points
 
-    // Correct winner only
-    return 2
 }
+
+
 
 /**
  * Calculate and update points for all picks on a fight after result is set
