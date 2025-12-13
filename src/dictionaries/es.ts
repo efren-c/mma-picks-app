@@ -6,6 +6,7 @@ export const es = {
         signOut: "Cerrar sesión",
         logIn: "Iniciar sesión",
         signUp: "Registrarse",
+        howToPlay: "Cómo Jugar",
     },
     home: {
         title: "Predice resultados, compite con amigos y sube en la clasificación.",
@@ -74,5 +75,25 @@ export const es = {
     },
     eventPage: {
         card: "Cartelera"
+    },
+    howToPlay: {
+        title: "Cómo jugar",
+        subtitle: "Domina el sistema de puntuación y sube a la cima",
+        scoringTitle: "Sistema de puntuación",
+        winnerPoints: "2 pts",
+        winnerDesc: "Predice el ganador correcto",
+        methodPoints: "+3 pts",
+        methodDesc: "Bono por método correcto (KO/Sumisión/DEC)",
+        roundPoints: "+5 pts",
+        roundDesc: "Bono por ronda correcta",
+        perfectPickTitle: "Pick Perfecto",
+        perfectPickDesc: "¡Acierta todo para un máximo de 10 puntos!",
+        lockingTitle: "Bloqueo de Picks",
+        lockingDesc: "Las predicciones se bloquean exactamente a la hora marcada del inicio del evento",
+        cta: "¡Haz tus Picks!",
+        timeZoneNote: "Se utiliza la hora estándar global para todos los eventos.",
+        winnerTitle: "Ganador",
+        methodTitle: "Método",
+        roundTitle: "Ronda",
     }
 } as const;

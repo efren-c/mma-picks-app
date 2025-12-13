@@ -6,6 +6,7 @@ export const en = {
         signOut: "Sign Out",
         logIn: "Log In",
         signUp: "Sign Up",
+        howToPlay: "How to Play",
     },
     home: {
         title: "Predict fight outcomes, compete with friends, and climb the leaderboard.",
@@ -74,5 +75,25 @@ export const en = {
     },
     eventPage: {
         card: "Fight Card"
+    },
+    howToPlay: {
+        title: "How to Play",
+        subtitle: "Master the scoring system and climb to the top.",
+        scoringTitle: "Scoring System",
+        winnerPoints: "2 pts",
+        winnerDesc: "Predict the correct winner of the fight.",
+        methodPoints: "+3 pts",
+        methodDesc: "Predict the correct method (KO/TKO, Submission, Decision).",
+        roundPoints: "+5 pts",
+        roundDesc: "Predict the correct round the fight ends.",
+        perfectPickTitle: "Perfect Pick Bonus",
+        perfectPickDesc: "Get everything right for a maximum of 10 points!",
+        lockingTitle: "Locking Rules",
+        lockingDesc: "Picks are locked exactly when the event starts.",
+        timeZoneNote: "Global Standard Time is used for all events.",
+        cta: "Make your picks!",
+        winnerTitle: "Winner",
+        methodTitle: "Method",
+        roundTitle: "Round",
     }
 } as const;

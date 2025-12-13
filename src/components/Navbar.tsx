@@ -34,6 +34,9 @@ export async function Navbar() {
                             <Link href="/leaderboard" className="text-slate-200 hover:text-white transition-colors text-sm font-semibold">
                                 {dict.navbar.leaderboard}
                             </Link>
+                            <Link href="/how-to-play" className="text-slate-200 hover:text-white transition-colors text-sm font-semibold">
+                                {dict.navbar.howToPlay}
+                            </Link>
                         </nav>
                     </div>
                     <div className="flex items-center gap-4">
@@ -47,6 +50,11 @@ export async function Navbar() {
                                 <Link href="/leaderboard" className="md:hidden">
                                     <Button variant="ghost" size="sm" className="text-slate-200 hover:text-white font-medium">
                                         {dict.navbar.leaderboard}
+                                    </Button>
+                                </Link>
+                                <Link href="/how-to-play" className="md:hidden">
+                                    <Button variant="ghost" size="sm" className="text-slate-200 hover:text-white font-medium">
+                                        {dict.navbar.howToPlay}
                                     </Button>
                                 </Link>
                                 {isAdmin && (
