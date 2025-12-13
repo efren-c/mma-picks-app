@@ -69,6 +69,8 @@ export const es = {
         liveNow: "EN VIVO",
         completed: "COMPLETADO",
         upcoming: "PRÓXIMAMENTE",
+        today: "HOY",
+        tomorrow: "MAÑANA",
     },
     eventPage: {
         card: "Cartelera"

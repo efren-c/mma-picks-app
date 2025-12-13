@@ -69,6 +69,8 @@ export const en = {
         liveNow: "LIVE NOW",
         completed: "COMPLETED",
         upcoming: "UPCOMING",
+        today: "TODAY",
+        tomorrow: "TOMORROW",
     },
     eventPage: {
         card: "Fight Card"
