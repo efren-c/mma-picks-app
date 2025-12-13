@@ -357,3 +357,50 @@ export async function deleteFight(fightId: string, eventId: string) {
         return { message: 'Failed to delete fight' }
     }
 }
+
+export async function reorderFight(
+    fightId: string,
+    eventId: string,
+    direction: 'UP' | 'DOWN'
+) {
+    await requireAdmin()
+
+    try {
+        const fight = await prisma.fight.findUnique({
+            where: { id: fightId },
+        })
+
+        if (!fight) return { message: 'Fight not found' }
+
+        const currentOrder = fight.order
+        const targetOrder = direction === 'UP' ? currentOrder - 1 : currentOrder + 1
+
+        // Find the fight at the target order
+        const otherFight = await prisma.fight.findFirst({
+            where: {
+                eventId,
+                order: targetOrder,
+            },
+        })
+
+        if (!otherFight) return { message: 'Cannot move further' }
+
+        // Swap orders
+        await prisma.$transaction([
+            prisma.fight.update({
+                where: { id: fightId },
+                data: { order: targetOrder },
+            }),
+            prisma.fight.update({
+                where: { id: otherFight.id },
+                data: { order: currentOrder },
+            }),
+        ])
+
+        revalidatePath(`/admin/events/${eventId}`)
+        return { message: 'Fight reordered' }
+    } catch (error) {
+        console.error('Error reordering fight:', error)
+        return { message: 'Failed to reorder fight' }
+    }
+}
