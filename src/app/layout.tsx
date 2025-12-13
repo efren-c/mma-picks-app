@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://picks-mma.com"),
   title: "MMA Picks",
   description: "Predict fight outcomes and compete.",
   icons: {
