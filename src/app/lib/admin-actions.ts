@@ -323,13 +323,37 @@ export async function deleteFight(fightId: string, eventId: string) {
     await requireAdmin()
 
     try {
+        // Find picks associated with this fight to know which users need recalculation
+        const picks = await prisma.pick.findMany({
+            where: { fightId },
+            select: { userId: true }
+        })
+
+        const affectedUserIds = [...new Set(picks.map(p => p.userId))]
+
+        // Delete all picks for this fight
+        await prisma.pick.deleteMany({
+            where: { fightId }
+        })
+
+        // Delete the fight
         await prisma.fight.delete({
             where: { id: fightId },
         })
 
+        // Recalculate total points for affected users
+        // This ensures if points were already awarded, the user's total is corrected.
+        if (affectedUserIds.length > 0) {
+            const { recalculateUserTotalPoints } = await import('@/lib/scoring')
+            for (const userId of affectedUserIds) {
+                await recalculateUserTotalPoints(userId)
+            }
+        }
+
         revalidatePath(`/admin/events/${eventId}`)
         return { message: 'Fight deleted successfully' }
     } catch (error) {
+        console.error('Error deleting fight:', error)
         return { message: 'Failed to delete fight' }
     }
 }

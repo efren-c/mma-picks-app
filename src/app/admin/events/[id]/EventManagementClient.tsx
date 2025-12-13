@@ -362,7 +362,12 @@ export default function EventManagementClient({ event }: { event: Event }) {
     }
 
     const handleDeleteFight = async (fightId: string) => {
-        if (confirm('Are you sure you want to delete this fight?')) {
+        const fight = event.fights.find(f => f.id === fightId)
+        const message = fight
+            ? `Delete: ${fight.fighterA} vs ${fight.fighterB}?`
+            : 'Are you sure you want to delete this fight?'
+
+        if (confirm(message)) {
             await deleteFight(fightId, event.id)
         }
     }
