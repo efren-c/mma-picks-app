@@ -52,7 +52,7 @@ export function EventSelector({ events, years, selectedEventId, selectedYear, di
                         backgroundSize: "0.65em auto",
                     }}
                 >
-                    <option value="all-time">All Time</option>
+                    <option value="all-time">{dict.leaderboard.allTime}</option>
                     {years.map(year => (
                         <option key={year} value={year}>
                             {year}
@@ -75,7 +75,7 @@ export function EventSelector({ events, years, selectedEventId, selectedYear, di
                     }}
                 >
                     <option value="season">
-                        {selectedYear === 'all-time' ? dict.leaderboard.globalTitle : `${selectedYear} Season`}
+                        {selectedYear === 'all-time' ? dict.leaderboard.globalTitle : `${selectedYear} ${dict.leaderboard.season}`}
                     </option>
                     {selectedYear !== 'all-time' && events.map(event => (
                         <option key={event.id} value={event.id}>

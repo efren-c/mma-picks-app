@@ -65,6 +65,9 @@ export const en = {
         badges: "Badges",
         you: "YOU",
         titleSuffix: "Leaderboard",
+        allTime: "All Time",
+        season: "Season",
+        seasonTitle: "{year} Season Leaderboard",
     },
     eventCard: {
         liveNow: "LIVE NOW",

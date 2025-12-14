@@ -58,8 +58,8 @@ export default async function LeaderboardPage(props: { searchParams: Promise<{ e
     } else {
         // Yearly leaderboard (Season)
         leaderboard = await getYearlyLeaderboard(targetYear);
-        // Ensure title reflects "Season"
-        title = `${targetYear} Season Leaderboard`;
+        // Ensure title reflects "Season" with correct localization
+        title = dict.leaderboard.seasonTitle.replace('{year}', targetYear.toString());
     }
 
     const session = await auth();

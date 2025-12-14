@@ -65,6 +65,9 @@ export const es = {
         badges: "Insignias",
         you: "TÚ",
         titleSuffix: "Clasificación",
+        allTime: "Todos los tiempos",
+        season: "Temporada",
+        seasonTitle: "Temporada clasificación {year}",
     },
     eventCard: {
         liveNow: "EN VIVO",
