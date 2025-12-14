@@ -6,45 +6,84 @@ import { ChangeEvent } from "react"
 interface Event {
     id: string
     name: string
+    date: Date
 }
 
 interface EventSelectorProps {
     events: Event[]
+    years: number[]
     selectedEventId?: string
+    selectedYear: string
+    dict: any
 }
 
-export function EventSelector({ events, selectedEventId, dict }: EventSelectorProps & { dict: any }) {
+export function EventSelector({ events, years, selectedEventId, selectedYear, dict }: EventSelectorProps) {
     const router = useRouter()
 
-    const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value
-        if (value) {
-            router.push(`/leaderboard?eventId=${value}`)
+    const handleYearChange = (e: ChangeEvent<HTMLSelectElement>) => {
+        const year = e.target.value;
+        router.push(year === 'all-time' ? '/leaderboard?year=all-time' : `/leaderboard?year=${year}`);
+    }
+
+    const handleEventChange = (e: ChangeEvent<HTMLSelectElement>) => {
+        const eventId = e.target.value;
+        const yearParam = selectedYear === 'all-time' ? '&year=all-time' : `&year=${selectedYear}`;
+
+        if (eventId && eventId !== "season") {
+            router.push(`/leaderboard?eventId=${eventId}${yearParam}`);
         } else {
-            router.push('/leaderboard')
+            // Season/Yearly view
+            router.push(selectedYear === 'all-time' ? '/leaderboard?year=all-time' : `/leaderboard?year=${selectedYear}`);
         }
     }
 
     return (
-        <div className="relative">
-            <select
-                value={selectedEventId || ""}
-                onChange={handleChange}
-                className="w-full md:w-64 bg-slate-900 border border-slate-700 text-white text-sm rounded-md pl-3 pr-10 py-2 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 appearance-none cursor-pointer hover:bg-slate-800 transition-colors"
-                style={{
-                    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23cbd5e1%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 0.75rem center",
-                    backgroundSize: "0.65em auto",
-                }}
-            >
-                <option value="">{dict.leaderboard.globalTitle}</option>
-                {events.map(event => (
-                    <option key={event.id} value={event.id}>
-                        {event.name}
+        <div className="flex flex-col md:flex-row gap-4">
+            {/* Year Selector */}
+            <div className="relative">
+                <select
+                    value={selectedYear}
+                    onChange={handleYearChange}
+                    className="w-full md:w-32 bg-slate-900 border border-slate-700 text-white text-sm rounded-md pl-3 pr-10 py-2 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 appearance-none cursor-pointer hover:bg-slate-800 transition-colors"
+                    style={{
+                        backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23cbd5e1%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "right 0.75rem center",
+                        backgroundSize: "0.65em auto",
+                    }}
+                >
+                    <option value="all-time">All Time</option>
+                    {years.map(year => (
+                        <option key={year} value={year}>
+                            {year}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Event Selector */}
+            <div className="relative">
+                <select
+                    value={selectedEventId || "season"}
+                    onChange={handleEventChange}
+                    className="w-full md:w-64 bg-slate-900 border border-slate-700 text-white text-sm rounded-md pl-3 pr-10 py-2 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 appearance-none cursor-pointer hover:bg-slate-800 transition-colors"
+                    style={{
+                        backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23cbd5e1%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "right 0.75rem center",
+                        backgroundSize: "0.65em auto",
+                    }}
+                >
+                    <option value="season">
+                        {selectedYear === 'all-time' ? dict.leaderboard.globalTitle : `${selectedYear} Season`}
                     </option>
-                ))}
-            </select>
+                    {selectedYear !== 'all-time' && events.map(event => (
+                        <option key={event.id} value={event.id}>
+                            {event.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
         </div>
     )
 }

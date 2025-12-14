@@ -87,6 +87,54 @@ export async function getEventLeaderboard(eventId: string) {
     return leaderboard;
 }
 
+export async function getYearlyLeaderboard(year: number) {
+    const startDate = new Date(`${year}-01-01T00:00:00.000Z`);
+    const endDate = new Date(`${year + 1}-01-01T00:00:00.000Z`);
+
+    const users = await prisma.user.findMany({
+        select: {
+            id: true,
+            username: true,
+            badges: {
+                include: {
+                    badge: true,
+                },
+            },
+            picks: {
+                where: {
+                    fight: {
+                        event: {
+                            date: {
+                                gte: startDate,
+                                lt: endDate,
+                            },
+                        },
+                    },
+                },
+                select: {
+                    points: true,
+                },
+            },
+        },
+    });
+
+    return users
+        .map((user) => {
+            const yearlyPoints = user.picks.reduce((sum, pick) => sum + (pick.points || 0), 0);
+            return {
+                id: user.id,
+                username: user.username,
+                points: yearlyPoints,
+                badges: user.badges,
+            };
+        })
+        .sort((a, b) => b.points - a.points)
+        .map((user, index) => ({
+            ...user,
+            rank: index + 1,
+        }));
+}
+
 export async function checkAndAwardBadges(userId: string, eventId: string) {
     const user = await prisma.user.findUnique({
         where: { id: userId },
