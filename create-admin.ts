@@ -24,6 +24,7 @@ async function createAdmin() {
                 username,
                 password: hashedPassword,
                 role: 'ADMIN',
+                emailVerified: new Date(),
             },
         });
 

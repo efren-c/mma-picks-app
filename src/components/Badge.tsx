@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { Trophy, Medal, Star, Target, Dog } from 'lucide-react';
 import {
     Tooltip,
@@ -16,6 +18,8 @@ interface BadgeProps {
 }
 
 export function Badge({ name, icon, description, size = 16 }: BadgeProps) {
+    const [open, setOpen] = useState(false);
+
     const getIcon = () => {
         switch (icon) {
             case 'Trophy': return <Trophy size={size} className="text-yellow-500" />;
@@ -29,9 +33,14 @@ export function Badge({ name, icon, description, size = 16 }: BadgeProps) {
 
     return (
         <TooltipProvider>
-            <Tooltip>
+            <Tooltip open={open} onOpenChange={setOpen}>
                 <TooltipTrigger asChild>
-                    <div className="cursor-help p-1 rounded-full bg-secondary/20 hover:bg-secondary/40 transition-colors">
+                    <div
+                        className="cursor-help p-1 rounded-full bg-secondary/20 hover:bg-secondary/40 transition-colors"
+                        onClick={() => setOpen(!open)}
+                        onMouseEnter={() => setOpen(true)}
+                        onMouseLeave={() => setOpen(false)}
+                    >
                         {getIcon()}
                     </div>
                 </TooltipTrigger>
