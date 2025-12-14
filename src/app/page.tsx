@@ -16,17 +16,20 @@ export default async function Home() {
   })
 
   // Filter events into today and upcoming
+  // Get current time in Mexico City timezone (America/Mexico_City, UTC-6)
   const now = new Date()
-  // Adjust "now" to ensure we capture late night events as "today" even after UTC midnight
-  // Subtracting 2 hours keeps us in the "previous day" relative to UTC until 2 AM local time.
-  const adjustedNow = new Date(now.getTime() - 2 * 60 * 60 * 1000)
+  const mexicoCityTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
 
-  const todayStart = new Date(adjustedNow.getFullYear(), adjustedNow.getMonth(), adjustedNow.getDate())
-  const todayEnd = new Date(adjustedNow.getFullYear(), adjustedNow.getMonth(), adjustedNow.getDate(), 23, 59, 59)
+  const todayStart = new Date(mexicoCityTime.getFullYear(), mexicoCityTime.getMonth(), mexicoCityTime.getDate())
+  const todayEnd = new Date(mexicoCityTime.getFullYear(), mexicoCityTime.getMonth(), mexicoCityTime.getDate(), 23, 59, 59)
+
 
   const todaysEvents = events.filter(event => {
     const eventDate = new Date(event.date)
-    return eventDate >= todayStart && eventDate <= todayEnd
+    // Check if the event is on today's date (regardless of time) in Mexico City timezone
+    return eventDate.getFullYear() === mexicoCityTime.getFullYear() &&
+      eventDate.getMonth() === mexicoCityTime.getMonth() &&
+      eventDate.getDate() === mexicoCityTime.getDate()
   })
 
   const upcomingEvents = events.filter(event => {
@@ -36,8 +39,12 @@ export default async function Home() {
 
   const pastEvents = events.filter(event => {
     const eventDate = new Date(event.date)
-    return eventDate < todayStart
-  })
+    // Event is past if it's not today and before today (in Mexico City timezone)
+    const isPastDate = eventDate.getFullYear() < mexicoCityTime.getFullYear() ||
+      (eventDate.getFullYear() === mexicoCityTime.getFullYear() && eventDate.getMonth() < mexicoCityTime.getMonth()) ||
+      (eventDate.getFullYear() === mexicoCityTime.getFullYear() && eventDate.getMonth() === mexicoCityTime.getMonth() && eventDate.getDate() < mexicoCityTime.getDate())
+    return isPastDate
+  }).reverse()
 
   return (
     <main className="min-h-screen bg-slate-950 p-8">
