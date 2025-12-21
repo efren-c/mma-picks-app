@@ -47,6 +47,19 @@ export const authConfig = {
 
             return true;
         },
+        async redirect({ url, baseUrl }) {
+            // Allows relative callback URLs
+            if (url.startsWith("/")) return `${baseUrl}${url}`
+            // Allows callback URLs on the same origin
+            if (new URL(url).origin === baseUrl) return url
+
+            // Allow specific external domain
+            if (url === 'https://picks-mma.com/' || url.startsWith('https://picks-mma.com/')) {
+                return url
+            }
+
+            return baseUrl
+        },
     },
     providers: [], // Add providers with an empty array for now
 } satisfies NextAuthConfig;

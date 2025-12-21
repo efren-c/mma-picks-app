@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { Providers } from "@/components/Providers";
+import { AutoLogout } from "@/components/AutoLogout";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,9 +26,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Navbar />
-        {children}
-        <Toaster position="top-center" richColors />
+        <Providers>
+          <AutoLogout />
+          <Navbar />
+          {children}
+          <Toaster position="top-center" richColors />
+        </Providers>
       </body>
     </html>
   );
