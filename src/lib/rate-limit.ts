@@ -18,12 +18,25 @@ function createLimiter(limit: number, window: string) {
         } as any as Ratelimit;
     }
 
-    return new Ratelimit({
+    const ratelimit = new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(limit, window as any),
         analytics: true,
         prefix: '@upstash/ratelimit',
     });
+
+    // Wrapper to fail open if Redis is down/archived
+    return {
+        limit: async (identifier: string) => {
+            try {
+                return await ratelimit.limit(identifier);
+            } catch (error) {
+                console.error('Rate limit error (failing open):', error);
+                // Return a "success" response so the user isn't blocked
+                return { success: true, limit: 100, remaining: 99, reset: 0 };
+            }
+        }
+    } as any as Ratelimit;
 }
 
 // 1. Login Rate Limit
