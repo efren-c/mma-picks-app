@@ -6,6 +6,7 @@ import { createFight, updateFightResult, deleteFight, updateEvent, deleteEvent, 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowUp, ArrowDown } from "lucide-react"
+import { toZonedTime, format } from "date-fns-tz"
 
 import { useRouter } from "next/navigation"
 
@@ -227,11 +228,11 @@ function EditEventForm({ event, onCancel }: { event: Event; onCancel: () => void
             </div>
 
             <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-400">Date</label>
+                <label className="text-sm font-medium text-slate-400">Date (Mexico City Time)</label>
                 <input
                     type="datetime-local"
                     name="date"
-                    defaultValue={new Date(event.date).toISOString().slice(0, 16)}
+                    defaultValue={format(toZonedTime(event.date, 'America/Mexico_City'), "yyyy-MM-dd'T'HH:mm")}
                     required
                     className="w-full p-2 rounded-md bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-red-600"
                 />
