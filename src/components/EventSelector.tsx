@@ -33,7 +33,12 @@ export function EventSelector({ events, years, selectedEventId, selectedYear, di
             router.push(`/leaderboard?eventId=${eventId}${yearParam}`);
         } else {
             // Season/Yearly view
-            router.push(selectedYear === 'all-time' ? '/leaderboard?year=all-time' : `/leaderboard?year=${selectedYear}`);
+            if (selectedYear === 'all-time') {
+                router.push('/leaderboard?year=all-time');
+            } else {
+                // Explicitly pass eventId=season so the backend doesn't auto-select a live event
+                router.push(`/leaderboard?eventId=season${yearParam}`);
+            }
         }
     }
 

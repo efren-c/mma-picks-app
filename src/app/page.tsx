@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { EventCard } from "@/components/EventCard"
 import { getDictionary } from "@/lib/i18n"
+import { toZonedTime } from 'date-fns-tz'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,33 +18,33 @@ export default async function Home() {
 
   // Filter events into today and upcoming
   // Get current time in Mexico City timezone (America/Mexico_City, UTC-6)
+  const timeZone = 'America/Mexico_City'
   const now = new Date()
-  const mexicoCityTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Mexico_City' }))
-
-  const todayStart = new Date(mexicoCityTime.getFullYear(), mexicoCityTime.getMonth(), mexicoCityTime.getDate())
-  const todayEnd = new Date(mexicoCityTime.getFullYear(), mexicoCityTime.getMonth(), mexicoCityTime.getDate(), 23, 59, 59)
-
+  const zonedNow = toZonedTime(now, timeZone)
 
   const todaysEvents = events.filter(event => {
-    const eventDate = new Date(event.date)
-    // Check if the event is on today's date (regardless of time) in Mexico City timezone
-    return eventDate.getFullYear() === mexicoCityTime.getFullYear() &&
-      eventDate.getMonth() === mexicoCityTime.getMonth() &&
-      eventDate.getDate() === mexicoCityTime.getDate()
+    const zonedEventDate = toZonedTime(event.date, timeZone)
+    return zonedEventDate.getFullYear() === zonedNow.getFullYear() &&
+      zonedEventDate.getMonth() === zonedNow.getMonth() &&
+      zonedEventDate.getDate() === zonedNow.getDate()
   })
 
   const upcomingEvents = events.filter(event => {
-    const eventDate = new Date(event.date)
-    return eventDate > todayEnd
+    const zonedEventDate = toZonedTime(event.date, timeZone)
+    // Create start of tomorrow in Mexico City time for comparison
+    const startOfTomorrow = new Date(zonedNow.getFullYear(), zonedNow.getMonth(), zonedNow.getDate() + 1)
+
+    // Check if event is strictly after the end of today (Mexico City time)
+    return zonedEventDate >= startOfTomorrow
   })
 
   const pastEvents = events.filter(event => {
-    const eventDate = new Date(event.date)
-    // Event is past if it's not today and before today (in Mexico City timezone)
-    const isPastDate = eventDate.getFullYear() < mexicoCityTime.getFullYear() ||
-      (eventDate.getFullYear() === mexicoCityTime.getFullYear() && eventDate.getMonth() < mexicoCityTime.getMonth()) ||
-      (eventDate.getFullYear() === mexicoCityTime.getFullYear() && eventDate.getMonth() === mexicoCityTime.getMonth() && eventDate.getDate() < mexicoCityTime.getDate())
-    return isPastDate
+    const zonedEventDate = toZonedTime(event.date, timeZone)
+    // Create start of today in Mexico City time for comparison
+    const startOfToday = new Date(zonedNow.getFullYear(), zonedNow.getMonth(), zonedNow.getDate())
+
+    // Check if event is strictly before the start of today (Mexico City time)
+    return zonedEventDate < startOfToday
   }).reverse()
 
   return (
