@@ -82,12 +82,12 @@ export default async function EventPage({ params }: EventPageProps) {
                             <img
                                 src={event.image}
                                 alt={event.name}
-                                className="w-full h-full object-cover opacity-60"
+                                className="w-full h-full object-cover object-top opacity-60"
                             />
                         ) : (
                             <div className="w-full h-full bg-slate-800" />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
+                        <div className="absolute" />
                         <div className="absolute bottom-0 left-0 p-8">
                             <h1 className="text-4xl font-bold text-white mb-2">{event.name}</h1>
                             <div className="flex items-center text-slate-300">

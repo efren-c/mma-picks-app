@@ -124,7 +124,7 @@ export function EventCard({ id, name, date, image, slug, labels }: EventCardProp
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
                 <Card className={`overflow-hidden transition-colors cursor-pointer h-full flex flex-col border-slate-800 ${getBorderColor()}`}>
-                    <div className="relative h-48 w-full bg-slate-800">
+                    <div className="relative h-60 w-full bg-slate-800">
                         {image ? (
                             <img
                                 src={image}
@@ -136,17 +136,17 @@ export function EventCard({ id, name, date, image, slug, labels }: EventCardProp
                                 <Trophy className="w-16 h-16" />
                             </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+                        <div className="absolute inset-0" />
 
                         {/* Status Badge */}
                         <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold tracking-wider shadow-lg ${getStatusColor()}`}>
                             {getStatusText()}
                         </div>
                     </div>
-                    <CardHeader>
+                    <CardHeader className="p-4 pb-2">
                         <CardTitle className={`text-xl ${status === 'PAST' ? 'text-slate-400' : 'text-white'}`}>{name}</CardTitle>
                     </CardHeader>
-                    <CardContent className="mt-auto">
+                    <CardContent className="mt-auto p-4 pt-0">
                         <div className="flex items-center text-slate-400 text-sm">
                             <Calendar className="w-4 h-4 mr-2" />
                             <span>
