@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
-import { Calendar, Clock, Trophy } from "lucide-react"
+import { Clock, Calendar, Trophy } from "lucide-react"
 import { FightRow } from "@/components/FightRow"
 import { auth } from "@/auth"
 import { Card } from "@/components/ui/card"
+import { ClientDate } from "@/components/ClientDate"
 import { getDictionary } from "@/lib/i18n"
 
 interface EventPageProps {
@@ -93,19 +94,12 @@ export default async function EventPage({ params }: EventPageProps) {
                             <div className="flex items-center text-slate-300">
                                 <Calendar className="w-5 h-5 mr-2" />
                                 <span>
-                                    {new Date(event.date).toLocaleDateString('en-GB', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: '2-digit'
-                                    })}
+                                    <ClientDate date={event.date} format="date" />
                                 </span>
                                 <span className="mx-2 text-slate-600">•</span>
                                 <Clock className="w-4 h-4 mr-2" />
                                 <span>
-                                    {new Date(event.date).toLocaleTimeString(undefined, {
-                                        hour: 'numeric',
-                                        minute: '2-digit'
-                                    })}
+                                    <ClientDate date={event.date} format="time" />
                                 </span>
                             </div>
                         </div>

@@ -5,6 +5,7 @@ import { Calendar, Trophy, Clock } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { isToday, isTomorrow } from "date-fns"
+import { ClientDate } from "@/components/ClientDate"
 
 interface EventCardProps {
     id: string
@@ -150,21 +151,14 @@ export function EventCard({ id, name, date, image, slug, labels }: EventCardProp
                         <div className="flex items-center text-slate-400 text-sm">
                             <Calendar className="w-4 h-4 mr-2" />
                             <span>
-                                {new Date(date).toLocaleDateString('en-GB', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: '2-digit'
-                                })}
+                                <ClientDate date={date} format="date" />
                             </span>
                             {(status === 'LIVE' || status === 'TODAY' || status === 'TOMORROW' || status === 'UPCOMING') && (
                                 <>
                                     <span className="mx-2 text-slate-600">•</span>
                                     <Clock className="w-4 h-4 mr-2" />
                                     <span>
-                                        {new Date(date).toLocaleTimeString(undefined, {
-                                            hour: 'numeric',
-                                            minute: '2-digit'
-                                        })}
+                                        <ClientDate date={date} format="time" />
                                     </span>
                                 </>
                             )}

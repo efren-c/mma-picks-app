@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ClientDate } from '@/components/ClientDate'
 
 export default async function AdminPage() {
     const events = await prisma.event.findMany({
@@ -31,7 +32,7 @@ export default async function AdminPage() {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-slate-400 text-sm">
-                                    {new Date(event.date).toLocaleDateString()}
+                                    <ClientDate date={event.date} format="date" />
                                 </p>
                                 <p className="text-slate-500 text-sm mt-2">
                                     {event.fights.length} fights

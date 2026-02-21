@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Check, X, ChevronDown } from "lucide-react"
 import Link from "next/link"
+import { ClientDate } from "@/components/ClientDate"
 
 interface DashboardEventCardProps {
     event: {
@@ -41,7 +42,7 @@ export function DashboardEventCard({ event, picks, totalPoints, dict }: Dashboar
                             <CardTitle className="text-white">{event.name}</CardTitle>
                         </Link>
                         <p className="text-sm text-slate-400 mt-1">
-                            {new Date(event.date).toLocaleDateString()}
+                            <ClientDate date={event.date} format="date" />
                         </p>
                     </div>
                     <div
