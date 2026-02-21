@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { EventCard } from "@/components/EventCard"
 import { getDictionary } from "@/lib/i18n"
-import { toZonedTime } from 'date-fns-tz'
+import { formatInTimeZone } from 'date-fns-tz'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,35 +16,22 @@ export default async function Home() {
     }
   })
 
-  // Filter events into today and upcoming
-  // Get current time in Mexico City timezone (America/Mexico_City, UTC-6)
+  // Filter events into today, upcoming, and past
+  // Using string comparison of the localized date to strictly avoid server-side timezone offset bugs
   const timeZone = 'America/Mexico_City'
   const now = new Date()
-  const zonedNow = toZonedTime(now, timeZone)
+  const todayStr = formatInTimeZone(now, timeZone, 'yyyy-MM-dd')
 
   const todaysEvents = events.filter(event => {
-    const zonedEventDate = toZonedTime(event.date, timeZone)
-    return zonedEventDate.getFullYear() === zonedNow.getFullYear() &&
-      zonedEventDate.getMonth() === zonedNow.getMonth() &&
-      zonedEventDate.getDate() === zonedNow.getDate()
+    return formatInTimeZone(event.date, timeZone, 'yyyy-MM-dd') === todayStr
   })
 
   const upcomingEvents = events.filter(event => {
-    const zonedEventDate = toZonedTime(event.date, timeZone)
-    // Create start of tomorrow in Mexico City time for comparison
-    const startOfTomorrow = new Date(zonedNow.getFullYear(), zonedNow.getMonth(), zonedNow.getDate() + 1)
-
-    // Check if event is strictly after the end of today (Mexico City time)
-    return zonedEventDate >= startOfTomorrow
+    return formatInTimeZone(event.date, timeZone, 'yyyy-MM-dd') > todayStr
   })
 
   const pastEvents = events.filter(event => {
-    const zonedEventDate = toZonedTime(event.date, timeZone)
-    // Create start of today in Mexico City time for comparison
-    const startOfToday = new Date(zonedNow.getFullYear(), zonedNow.getMonth(), zonedNow.getDate())
-
-    // Check if event is strictly before the start of today (Mexico City time)
-    return zonedEventDate < startOfToday
+    return formatInTimeZone(event.date, timeZone, 'yyyy-MM-dd') < todayStr
   }).reverse()
 
   return (

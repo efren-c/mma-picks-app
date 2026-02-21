@@ -18,6 +18,8 @@ export const en = {
     fightRow: {
         locked: "Picks Locked",
         makePick: "Make Pick",
+        viewPick: "View Pick",
+        loading: "Loading...",
         officialResult: "Official Result",
         winsVia: "wins via",
         round: "Round",

@@ -18,6 +18,8 @@ export const es = {
     fightRow: {
         locked: "Predicciones cerradas",
         makePick: "Hacer predicción",
+        viewPick: "Ver Predicción",
+        loading: "Cargando...",
         officialResult: "Resultado oficial",
         winsVia: "gana vía",
         round: "Ronda",

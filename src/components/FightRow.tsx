@@ -140,7 +140,7 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
                 <div className="flex items-center text-slate-400">
                     <span className="mr-4 text-sm hidden sm:inline-block">
                         {isLocked
-                            ? (existingPick ? "View Pick" : dict.fightRow.locked)
+                            ? (existingPick ? dict.fightRow.viewPick : dict.fightRow.locked)
                             : (existingPick ? dict.pickForm.updatePick : dict.fightRow.makePick)
                         }
                     </span>
@@ -175,7 +175,7 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
 
                             {/* Pick Form */}
                             {isLoading ? (
-                                <div className="text-center text-slate-400 py-8">Loading...</div>
+                                <div className="text-center text-slate-400 py-8">{dict.fightRow.loading}</div>
                             ) : (
                                 <PickForm
                                     fightId={fight.id}
