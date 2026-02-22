@@ -25,7 +25,7 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "framer-motion": "^12.23.24",
-    "lucide-react": "^0.554.0",
+    "lucide-react": "^0.575.0",
     "next": "^16.0.7",
     "next-auth": "^5.0.0-beta.30",
     "react": "^19.2.1",
@@ -44,9 +44,12 @@
     "@types/validator": "^13.15.10",
     "dotenv-cli": "^7.4.3",
     "eslint": "^9",
-    "eslint-config-next": "16.0.4",
+    "eslint-config-next": "^16.1.6",
     "prisma": "^6.19.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "minimatch": ">=10.2.1"
   }
 }
