@@ -25,5 +25,7 @@ declare module "next-auth/jwt" {
     interface JWT {
         role: string
         username: string
+        /** Opaque refresh token stored in Upstash Redis for session rotation */
+        refreshToken?: string
     }
 }
