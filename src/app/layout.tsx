@@ -3,16 +3,24 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Toaster } from "sonner";
+import { Analytics } from "@vercel/analytics/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MMA Picks",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://picks-mma.com"),
+  title: {
+    template: "%s | MMA Picks",
+    default: "MMA Picks"
+  },
   description: "Predict fight outcomes and compete.",
   icons: {
     icon: '/icon.png',
   },
 };
+
+import { Providers } from "@/components/Providers";
+import { AutoLogout } from "@/components/AutoLogout";
 
 export default function RootLayout({
   children,
@@ -22,9 +30,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Navbar />
-        {children}
-        <Toaster position="top-center" richColors />
+        <Providers>
+          <AutoLogout />
+          <Navbar />
+          {children}
+          <Toaster position="top-center" richColors />
+          <Analytics />
+        </Providers>
       </body>
     </html>
   );

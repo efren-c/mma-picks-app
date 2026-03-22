@@ -1,9 +1,12 @@
 "use client"
 
 import { useActionState, useState, useEffect } from "react"
-import { createFight, updateFightResult, deleteFight, updateEvent, deleteEvent, updateFight } from "@/app/lib/admin-actions"
+import { useFormStatus } from "react-dom"
+import { createFight, updateFightResult, deleteFight, updateEvent, deleteEvent, updateFight, reorderFight } from "@/app/lib/admin-actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowUp, ArrowDown } from "lucide-react"
+import { toZonedTime, format } from "date-fns-tz"
 
 import { useRouter } from "next/navigation"
 
@@ -24,6 +27,26 @@ interface Event {
     date: Date
     image: string | null
     fights: Fight[]
+}
+
+function SubmitButton({ children, className, ...props }: React.ComponentProps<typeof Button>) {
+    const { pending } = useFormStatus()
+
+    return (
+        <Button
+            type="submit"
+            disabled={pending}
+            className={className}
+            {...props}
+        >
+            {pending ? (
+                <>
+                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Saving...
+                </>
+            ) : children}
+        </Button>
+    )
 }
 
 function AddFightForm({ eventId }: { eventId: string }) {
@@ -113,8 +136,8 @@ function FightResultForm({ fight, eventId }: { fight: Fight; eventId: string }) 
                         className="w-full p-2 rounded-md bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:border-red-600"
                     >
                         <option value="">Select</option>
-                        <option value="A">Red corner</option>
-                        <option value="B">Blue corner</option>
+                        <option value="A">{fight.fighterA}</option>
+                        <option value="B">{fight.fighterB}</option>
                     </select>
                 </div>
 
@@ -172,9 +195,9 @@ function FightResultForm({ fight, eventId }: { fight: Fight; eventId: string }) 
                 </div>
             )}
 
-            <Button type="submit" size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white">
+            <SubmitButton size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white">
                 {fight.winner ? 'Update Result' : 'Set Result'}
-            </Button>
+            </SubmitButton>
         </form>
     )
 }
@@ -205,11 +228,11 @@ function EditEventForm({ event, onCancel }: { event: Event; onCancel: () => void
             </div>
 
             <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-400">Date</label>
+                <label className="text-sm font-medium text-slate-400">Date (Mexico City Time)</label>
                 <input
                     type="datetime-local"
                     name="date"
-                    defaultValue={new Date(event.date).toISOString().slice(0, 16)}
+                    defaultValue={format(toZonedTime(event.date, 'America/Mexico_City'), "yyyy-MM-dd'T'HH:mm")}
                     required
                     className="w-full p-2 rounded-md bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-red-600"
                 />
@@ -341,9 +364,18 @@ export default function EventManagementClient({ event }: { event: Event }) {
     }
 
     const handleDeleteFight = async (fightId: string) => {
-        if (confirm('Are you sure you want to delete this fight?')) {
+        const fight = event.fights.find(f => f.id === fightId)
+        const message = fight
+            ? `Delete: ${fight.fighterA} vs ${fight.fighterB}?`
+            : 'Are you sure you want to delete this fight?'
+
+        if (confirm(message)) {
             await deleteFight(fightId, event.id)
         }
+    }
+
+    const handleReorder = async (fightId: string, direction: 'UP' | 'DOWN') => {
+        await reorderFight(fightId, event.id, direction)
     }
 
     return (
@@ -410,7 +442,7 @@ export default function EventManagementClient({ event }: { event: Event }) {
                         <CardContent className="space-y-4">
                             {event.fights
                                 .sort((a, b) => a.order - b.order)
-                                .map((fight) => (
+                                .map((fight, i) => (
                                     <div key={fight.id} className="p-4 rounded-lg bg-slate-800/50 border border-slate-700">
                                         <div className="mb-3">
                                             <div className="flex items-start justify-between">
@@ -437,6 +469,26 @@ export default function EventManagementClient({ event }: { event: Event }) {
                                                 </div>
                                                 {editingFightId !== fight.id && (
                                                     <div className="flex gap-2">
+                                                        <div className="flex mr-2 items-center gap-1">
+                                                            <Button
+                                                                onClick={() => handleReorder(fight.id, 'UP')}
+                                                                disabled={i === 0}
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0 text-slate-400 hover:text-white disabled:opacity-30"
+                                                            >
+                                                                <ArrowUp className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => handleReorder(fight.id, 'DOWN')}
+                                                                disabled={i === event.fights.length - 1}
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0 text-slate-400 hover:text-white disabled:opacity-30"
+                                                            >
+                                                                <ArrowDown className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
                                                         <Button
                                                             onClick={() => setEditingFightId(fight.id)}
                                                             variant="ghost"

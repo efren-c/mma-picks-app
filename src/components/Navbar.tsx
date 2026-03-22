@@ -2,9 +2,13 @@ import Link from "next/link"
 import { auth, signOut } from "@/auth"
 import { Button } from "@/components/ui/button"
 import { prisma } from "@/lib/prisma"
+import { getDictionary, getLocale } from "@/lib/i18n"
+import { LanguageSelector } from "./LanguageSelector"
 
 export async function Navbar() {
     const session = await auth()
+    const locale = await getLocale()
+    const dict = await getDictionary(locale)
 
     // Check if user is admin and fetch username
     let isAdmin = false
@@ -28,7 +32,10 @@ export async function Navbar() {
                         </Link>
                         <nav className="hidden md:flex items-center gap-6">
                             <Link href="/leaderboard" className="text-slate-200 hover:text-white transition-colors text-sm font-semibold">
-                                Leaderboard
+                                {dict.navbar.leaderboard}
+                            </Link>
+                            <Link href="/how-to-play" className="text-slate-200 hover:text-white transition-colors text-sm font-semibold">
+                                {dict.navbar.howToPlay}
                             </Link>
                         </nav>
                     </div>
@@ -37,17 +44,27 @@ export async function Navbar() {
                             <div className="flex items-center gap-4">
                                 <Link href="/dashboard">
                                     <Button variant="ghost" size="sm" className="text-slate-200 hover:text-white font-medium">
-                                        Dashboard
+                                        {dict.navbar.dashboard}
+                                    </Button>
+                                </Link>
+                                <Link href="/leaderboard" className="md:hidden">
+                                    <Button variant="ghost" size="sm" className="text-slate-200 hover:text-white font-medium">
+                                        {dict.navbar.leaderboard}
+                                    </Button>
+                                </Link>
+                                <Link href="/how-to-play" className="md:hidden">
+                                    <Button variant="ghost" size="sm" className="text-slate-200 hover:text-white font-medium">
+                                        {dict.navbar.howToPlay}
                                     </Button>
                                 </Link>
                                 {isAdmin && (
                                     <Link href="/admin">
                                         <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 font-medium">
-                                            Admin Panel
+                                            {dict.navbar.adminPanel}
                                         </Button>
                                     </Link>
                                 )}
-                                <span className="text-sm text-slate-400">
+                                <span className="text-sm text-slate-400 hidden md:inline">
                                     {username}
                                 </span>
                                 <form
@@ -57,7 +74,7 @@ export async function Navbar() {
                                     }}
                                 >
                                     <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
-                                        Sign Out
+                                        {dict.navbar.signOut}
                                     </Button>
                                 </form>
                             </div>
@@ -65,16 +82,17 @@ export async function Navbar() {
                             <div className="flex items-center gap-2">
                                 <Link href="/login">
                                     <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
-                                        Log In
+                                        {dict.navbar.logIn}
                                     </Button>
                                 </Link>
                                 <Link href="/register">
                                     <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
-                                        Sign Up
+                                        {dict.navbar.signUp}
                                     </Button>
                                 </Link>
                             </div>
                         )}
+                        <LanguageSelector currentLocale={locale} />
                     </div>
                 </div>
             </div>

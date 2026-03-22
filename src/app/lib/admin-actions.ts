@@ -4,7 +4,8 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
+import { EventSchema, FightSchema, ResultSchema } from '@/lib/validation-schemas'
+import { fromZonedTime } from 'date-fns-tz'
 
 async function requireAdmin() {
     const session = await auth()
@@ -23,11 +24,7 @@ async function requireAdmin() {
     return user
 }
 
-const EventSchema = z.object({
-    name: z.string().min(1, 'Event name is required'),
-    date: z.string().min(1, 'Date is required'),
-    image: z.string().optional(),
-})
+
 
 export async function createEvent(
     prevState: { message?: string } | undefined,
@@ -47,17 +44,40 @@ export async function createEvent(
 
     const { name, date, image } = validatedFields.data
 
+    // Dynamic import to avoid earlier issues if utils wasn't ready, but standard import is fine now
+    const { slugify } = await import('@/lib/utils')
+    let slug = slugify(name)
+
+    // Simple uniqueness check could be added here similar to migration script, 
+    // but for now relying on database constraint to fail if duplicate.
+    // In a real app we'd retry with suffix.
+
     let event
     try {
         event = await prisma.event.create({
             data: {
                 name,
-                date: new Date(date),
+                slug,
+                date: fromZonedTime(date as string, 'America/Mexico_City'),
                 image: image || null,
             },
         })
     } catch (error) {
-        return { message: 'Failed to create event' }
+        console.error("Failed to create event:", error)
+        // Fallback for duplicates - append random suffix
+        try {
+            slug = `${slug}-${Math.floor(Math.random() * 1000)}`
+            event = await prisma.event.create({
+                data: {
+                    name,
+                    slug,
+                    date: fromZonedTime(date as string, 'America/Mexico_City'),
+                    image: image || null,
+                },
+            })
+        } catch (retryError) {
+            return { message: 'Failed to create event' }
+        }
     }
 
     revalidatePath('/admin')
@@ -82,13 +102,16 @@ export async function updateEvent(
     }
 
     const { name, date, image } = validatedFields.data
+    const { slugify } = await import('@/lib/utils')
+    const slug = slugify(name)
 
     try {
         await prisma.event.update({
             where: { id: eventId },
             data: {
                 name,
-                date: new Date(date),
+                slug, // Update slug when name changes
+                date: fromZonedTime(date as string, 'America/Mexico_City'),
                 image: image || null,
             },
         })
@@ -101,11 +124,7 @@ export async function updateEvent(
     }
 }
 
-const FightSchema = z.object({
-    fighterA: z.string().min(1, 'Fighter A is required'),
-    fighterB: z.string().min(1, 'Fighter B is required'),
-    order: z.string().min(1, 'Order is required'),
-})
+
 
 export async function createFight(
     eventId: string,
@@ -114,13 +133,20 @@ export async function createFight(
 ) {
     await requireAdmin()
 
-    const fighterA = formData.get('fighterA')
-    const fighterB = formData.get('fighterB')
-    const scheduledRounds = parseInt(formData.get('scheduledRounds') as string) || 3
+    const validatedFields = FightSchema.safeParse({
+        fighterA: formData.get('fighterA'),
+        fighterB: formData.get('fighterB'),
+        order: '1', // Temporary, will calculate actual order
+        scheduledRounds: formData.get('scheduledRounds') || '3',
+    })
 
-    if (!fighterA || !fighterB || typeof fighterA !== 'string' || typeof fighterB !== 'string') {
-        return { message: 'Invalid fields' }
+    if (!validatedFields.success) {
+        const firstError = Object.values(validatedFields.error.flatten().fieldErrors)[0]
+        return { message: firstError?.[0] || 'Invalid fields' }
     }
+
+    const { fighterA, fighterB } = validatedFields.data
+    const scheduledRounds = parseInt(formData.get('scheduledRounds') as string) || 3
 
     try {
         // Get current max order
@@ -156,13 +182,20 @@ export async function updateFight(
 ) {
     await requireAdmin()
 
-    const fighterA = formData.get('fighterA')
-    const fighterB = formData.get('fighterB')
-    const scheduledRounds = parseInt(formData.get('scheduledRounds') as string) || 3
+    const validatedFields = FightSchema.safeParse({
+        fighterA: formData.get('fighterA'),
+        fighterB: formData.get('fighterB'),
+        order: '1', // Not changing order in update
+        scheduledRounds: formData.get('scheduledRounds') || '3',
+    })
 
-    if (!fighterA || !fighterB || typeof fighterA !== 'string' || typeof fighterB !== 'string') {
-        return { message: 'Invalid fields' }
+    if (!validatedFields.success) {
+        const firstError = Object.values(validatedFields.error.flatten().fieldErrors)[0]
+        return { message: firstError?.[0] || 'Invalid fields' }
     }
+
+    const { fighterA, fighterB } = validatedFields.data
+    const scheduledRounds = parseInt(formData.get('scheduledRounds') as string) || 3
 
     try {
         await prisma.fight.update({
@@ -181,21 +214,7 @@ export async function updateFight(
     }
 }
 
-const ResultSchema = z.object({
-    winner: z.enum(['A', 'B']),
-    method: z.enum(['KO', 'SUB', 'DEC']),
-    round: z.string().optional(),
-}).refine(
-    (data) => {
-        // Round is required for KO and SUB, but not for DEC
-        if (data.method === 'DEC') return true
-        return data.round && data.round.length > 0
-    },
-    {
-        message: 'Round is required for KO/TKO and Submission',
-        path: ['round'],
-    }
-)
+
 
 export async function updateFightResult(
     fightId: string,
@@ -304,13 +323,84 @@ export async function deleteFight(fightId: string, eventId: string) {
     await requireAdmin()
 
     try {
+        // Find picks associated with this fight to know which users need recalculation
+        const picks = await prisma.pick.findMany({
+            where: { fightId },
+            select: { userId: true }
+        })
+
+        const affectedUserIds = [...new Set(picks.map(p => p.userId))]
+
+        // Delete all picks for this fight
+        await prisma.pick.deleteMany({
+            where: { fightId }
+        })
+
+        // Delete the fight
         await prisma.fight.delete({
             where: { id: fightId },
         })
 
+        // Recalculate total points for affected users
+        // This ensures if points were already awarded, the user's total is corrected.
+        if (affectedUserIds.length > 0) {
+            const { recalculateUserTotalPoints } = await import('@/lib/scoring')
+            for (const userId of affectedUserIds) {
+                await recalculateUserTotalPoints(userId)
+            }
+        }
+
         revalidatePath(`/admin/events/${eventId}`)
         return { message: 'Fight deleted successfully' }
     } catch (error) {
+        console.error('Error deleting fight:', error)
         return { message: 'Failed to delete fight' }
+    }
+}
+
+export async function reorderFight(
+    fightId: string,
+    eventId: string,
+    direction: 'UP' | 'DOWN'
+) {
+    await requireAdmin()
+
+    try {
+        const fight = await prisma.fight.findUnique({
+            where: { id: fightId },
+        })
+
+        if (!fight) return { message: 'Fight not found' }
+
+        const currentOrder = fight.order
+        const targetOrder = direction === 'UP' ? currentOrder - 1 : currentOrder + 1
+
+        // Find the fight at the target order
+        const otherFight = await prisma.fight.findFirst({
+            where: {
+                eventId,
+                order: targetOrder,
+            },
+        })
+
+        if (!otherFight) return { message: 'Cannot move further' }
+
+        // Swap orders
+        await prisma.$transaction([
+            prisma.fight.update({
+                where: { id: fightId },
+                data: { order: targetOrder },
+            }),
+            prisma.fight.update({
+                where: { id: otherFight.id },
+                data: { order: currentOrder },
+            }),
+        ])
+
+        revalidatePath(`/admin/events/${eventId}`)
+        return { message: 'Fight reordered' }
+    } catch (error) {
+        console.error('Error reordering fight:', error)
+        return { message: 'Failed to reorder fight' }
     }
 }

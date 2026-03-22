@@ -1,144 +1,125 @@
 # MMA Picks App
 
-A full-stack web application for MMA fans to predict fight outcomes and compete with others. Built with Next.js, Prisma, and NextAuth.
+A full-stack web application for MMA fans to predict fight outcomes, compete in global and event-specific leaderboards, and track their performance. Built with Next.js 15, Prisma, PostgreSQL, and NextAuth v5.
 
-![MMA Picks App](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
 ![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=flat-square&logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square&logo=postgresql)
 
 ## Features
 
-- 🥊 **Event Listings** - Browse upcoming and past MMA events
-- 🎯 **Fight Predictions** - Pick winners, methods, and rounds
-- 📊 **Scoring System** - Earn points for accurate predictions
-- 👤 **User Dashboard** - Track your picks and total points
-- 🔐 **Authentication** - Secure account creation and login
-- ✨ **Modern UI** - Dark theme with smooth animations
+### 🎮 For Players
+- **Event Listings**: Browse upcoming and past MMA events.
+- **Fight Predictions**: Pick winners, methods (KO/TKO, Sub, Dec), and specific rounds.
+- **Live Status**: Picks are locked automatically when an event starts.
+- **Immediate Feedback**: Visual confirmation when picks are saved.
+- **Leaderboards**: Compete globally or view rankings for specific events.
+- **Gamification**: Earn badges for achievements (First Pick, Perfect Event, Veteran, etc.).
+- **User Dashboard**: Track your pick history and performance stats.
+
+### 🛡️ For Admins
+- **Event Management**: Create and manage events.
+- **Fight Management**: Add fights, set scheduled rounds.
+- **Result Entry**: Input official fight results to automatically calculate scores.
+- **Loading States**: Optimized UI for managing data.
+
+### 🔐 Security & Tech
+- **Authentication**: Secure signup/login with password hashing (bcrypt).
+- **Role-Based Access**: Protected admin routes.
+- **Database**: Robust data integrity with PostgreSQL.
+- **Modern UI**: Responsive design with Dark Mode, Tailwind CSS v4, and smooth animations.
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 (App Router)
-- **Database**: Prisma + SQLite
-- **Authentication**: NextAuth.js v5
+- **Framework**: Next.js 15 (App Router)
+- **Database**: PostgreSQL (via Prisma ORM)
+- **Authentication**: NextAuth.js v5 (Credentials Provider)
 - **Styling**: Tailwind CSS v4
-- **Animations**: Framer Motion
-- **UI Components**: Radix UI
-- **Notifications**: Sonner
-- **Icons**: Lucide React
+- **State/Animations**: React Server Actions, Framer Motion
+- **UI Components**: Radix UI, Lucide React
 
 ## Getting Started
 
 ### Prerequisites
-
-- Node.js 18+ 
-- npm or yarn
+- Node.js 18+
+- PostgreSQL Database (Local or Cloud like Supabase/Neon)
 
 ### Installation
 
-1. Clone the repository:
-```bash
-git clone https://github.com/YOUR_USERNAME/mma-picks-app.git
-cd mma-picks-app
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/mma-picks-app.git
+   cd mma-picks-app
+   ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-3. Set up environment variables:
-```bash
-# Create a .env file in the root directory
-DATABASE_URL="file:./dev.db"
-NEXTAUTH_SECRET="your-secret-key-here"
-RAPID_API_KEY="your-rapidapi-key" # Optional: for MMA Stats API
-```
+3. **Set up environment variables:**
+   Create a `.env` file in the root directory:
+   ```env
+   # Database connection
+   DATABASE_URL="postgresql://user:password@localhost:5432/mmapicks"
 
-4. Set up the database:
-```bash
-npx prisma migrate dev
-npx tsx prisma/seed.ts
-```
+   # Authentication Secret (generate with `openssl rand -base64 32`)
+   NEXTAUTH_SECRET="your-super-secret-key"
+   
+   # Optional: External API for importing events
+   RAPID_API_KEY="your-rapidapi-key"
+   ```
 
-5. Run the development server:
-```bash
-npm run dev
-```
+4. **Initialize the database:**
+   ```bash
+   npx prisma migrate dev
+   npx tsx prisma/seed.ts # Seeds initial data including badges
+   ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open** [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Database Schema
 
-- **User** - Authentication and points tracking
-- **Event** - MMA events with dates and images
-- **Fight** - Individual fights with results
-- **Pick** - User predictions with points awarded
+- **User**: Stores auth info, roles (USER/ADMIN), and points.
+- **Event**: Represents an MMA event card.
+- **Fight**: Individual match-ups within an event.
+- **Pick**: User's prediction for a specific fight.
+- **Badge**: Achievement definitions (name, icon, description).
+- **UserBadge**: Badges earned by users.
 
 ## Scoring System
 
-- **Winner Correct**: +10 points
-- **Method Correct**: +5 points
-- **Round Correct**: +5 points (for finishes)
-- **Perfect Pick Bonus**: +10 points
+- **Perfect Pick**: +10 points
+- **Fighter + Round Correct**: +7 points
+- **Method Correct but not round (or decision)**: +5 points
+- **Only Fighter Correct**: +2 points
 
 ## Project Structure
 
 ```
-mma-picks-app/
-├── prisma/
-│   ├── schema.prisma      # Database schema
-│   └── seed.ts            # Database seeding
-├── src/
-│   ├── app/
-│   │   ├── actions.ts     # Server actions
-│   │   ├── dashboard/     # User dashboard
-│   │   ├── events/        # Event pages
-│   │   ├── login/         # Login page
-│   │   └── register/      # Registration page
-│   ├── components/        # React components
-│   ├── lib/               # Utilities and configs
-│   └── types/             # TypeScript types
-└── package.json
+src/
+├── app/
+│   ├── admin/         # Protected Admin Panel
+│   ├── dashboard/     # User Dashboard
+│   ├── events/        # Event Details & Pick Forms
+│   ├── leaderboard/   # Global & Event Leaderboards
+│   ├── login/         # Auth pages
+│   └── register/      # Auth pages
+├── components/        # Reusable UI components
+├── lib/               # Utilities, Prisma client, Server Actions
+└── types/             # TypeScript definitions
 ```
-
-## Development
-
-### Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npx prisma studio` - Open Prisma Studio (database GUI)
-
-### Adding New Events
-
-Update the mock data in `src/lib/mma-api.ts` and reseed the database:
-```bash
-npx prisma migrate reset --force
-npx tsx prisma/seed.ts
-```
-
-## Deployment
-
-This app can be deployed to Vercel, Netlify, or any platform that supports Next.js.
-
-### Vercel Deployment
-
-1. Push your code to GitHub
-2. Import your repository on [Vercel](https://vercel.com)
-3. Add environment variables
-4. Deploy!
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please submit a Pull Request.
 
 ## License
 
-MIT License - feel free to use this project for learning or personal use.
-
-## Acknowledgments
-
-- MMA Stats API for event data
-- Next.js team for the amazing framework
-- Vercel for hosting solutions
+MIT License.

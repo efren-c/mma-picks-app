@@ -5,12 +5,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Check, X, ChevronDown } from "lucide-react"
 import Link from "next/link"
+import { ClientDate } from "@/components/ClientDate"
 
 interface DashboardEventCardProps {
     event: {
         id: string
         name: string
         date: Date
+        slug?: string | null
     }
     picks: Array<{
         id: string
@@ -28,7 +30,7 @@ interface DashboardEventCardProps {
     totalPoints: number
 }
 
-export function DashboardEventCard({ event, picks, totalPoints }: DashboardEventCardProps) {
+export function DashboardEventCard({ event, picks, totalPoints, dict }: DashboardEventCardProps & { dict: any }) {
     const [isExpanded, setIsExpanded] = useState(false)
 
     return (
@@ -36,11 +38,11 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <Link href={`/events/${event.id}`} className="hover:text-red-500 transition-colors">
+                        <Link href={`/events/${event.slug || event.id}`} className="hover:text-red-500 transition-colors">
                             <CardTitle className="text-white">{event.name}</CardTitle>
                         </Link>
                         <p className="text-sm text-slate-400 mt-1">
-                            {new Date(event.date).toLocaleDateString()}
+                            <ClientDate date={event.date} format="date" />
                         </p>
                     </div>
                     <div
@@ -48,8 +50,8 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                         onClick={() => setIsExpanded(!isExpanded)}
                     >
                         <div className="text-right">
-                            <p className="text-sm text-slate-400">Event Score</p>
-                            <p className="text-2xl font-bold text-green-400">{totalPoints} pts</p>
+                            <p className="text-sm text-slate-400">{dict.dashboardEventCard.eventScore}</p>
+                            <p className="text-2xl font-bold text-green-400">{totalPoints} {dict.dashboardEventCard.pts}</p>
                         </div>
                         <motion.div
                             animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -81,7 +83,15 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                                         : pick.fight.winner === 'B'
                                             ? pick.fight.fighterB
                                             : pick.fight.winner
-                                    const isCorrect = hasFightResult && pick.winner === actualWinner
+
+                                    // Resolve pick winner from 'A'/'B' to actual fighter name
+                                    const pickWinnerName = pick.winner === 'A'
+                                        ? pick.fight.fighterA
+                                        : pick.winner === 'B'
+                                            ? pick.fight.fighterB
+                                            : pick.winner
+
+                                    const isCorrect = hasFightResult && pickWinnerName === actualWinner
 
                                     return (
                                         <div
@@ -99,10 +109,10 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                                                         {pick.fight.fighterA} vs {pick.fight.fighterB}
                                                     </div>
                                                     <div className="text-xs text-slate-400 mt-1">
-                                                        Your pick: <span className="font-semibold text-red-400">
-                                                            {pick.winner}
-                                                        </span> via {pick.method}
-                                                        {pick.method !== 'Decision' && ` (R${pick.round})`}
+                                                        {dict.dashboardEventCard.yourPick} <span className="font-semibold text-red-400">
+                                                            {pick.winner === 'A' ? pick.fight.fighterA : pick.fight.fighterB}
+                                                        </span> {dict.dashboardEventCard.via} {pick.method === 'KO' ? 'KO/TKO' : pick.method === 'SUB' ? dict.pickForm.submission : dict.pickForm.decision}
+                                                        {pick.method !== 'DEC' && ` (${dict.fightRow.round} ${pick.round})`}
                                                     </div>
                                                 </div>
                                                 {hasFightResult && (
@@ -111,14 +121,14 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                                                             <>
                                                                 <Check className="w-4 h-4 text-green-400" />
                                                                 <span className="text-sm font-bold text-green-400">
-                                                                    +{pick.points || 0} pts
+                                                                    +{pick.points || 0} {dict.dashboardEventCard.pts}
                                                                 </span>
                                                             </>
                                                         ) : (
                                                             <>
                                                                 <X className="w-4 h-4 text-red-400" />
                                                                 <span className="text-sm font-bold text-red-400">
-                                                                    0 pts
+                                                                    0 {dict.dashboardEventCard.pts}
                                                                 </span>
                                                             </>
                                                         )}
@@ -133,6 +143,6 @@ export function DashboardEventCard({ event, picks, totalPoints }: DashboardEvent
                     </motion.div>
                 )}
             </AnimatePresence>
-        </Card>
+        </Card >
     )
 }

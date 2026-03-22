@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
-import { Calendar, Trophy } from "lucide-react"
+import { Clock, Calendar, Trophy } from "lucide-react"
 import { FightRow } from "@/components/FightRow"
 import { auth } from "@/auth"
 import { Card } from "@/components/ui/card"
+import { ClientDate } from "@/components/ClientDate"
+import { getDictionary } from "@/lib/i18n"
 
 interface EventPageProps {
     params: Promise<{
@@ -14,9 +16,15 @@ interface EventPageProps {
 export default async function EventPage({ params }: EventPageProps) {
     const { id } = await params
     const session = await auth()
+    const dict = await getDictionary()
 
-    const event = await prisma.event.findUnique({
-        where: { id },
+    const event = await prisma.event.findFirst({
+        where: {
+            OR: [
+                { id },
+                { slug: id }
+            ]
+        },
         include: {
             fights: {
                 orderBy: { order: 'asc' }
@@ -57,6 +65,14 @@ export default async function EventPage({ params }: EventPageProps) {
         }
     }
 
+    // Calculate if event is completed (same logic as EventCard)
+    const eventDate = new Date(event.date)
+    const now = new Date()
+    // Adjust "now" to ensure we capture late night events as "today" even after UTC midnight
+    const adjustedNow = new Date(now.getTime() - 2 * 60 * 60 * 1000)
+    const todayStart = new Date(adjustedNow.getFullYear(), adjustedNow.getMonth(), adjustedNow.getDate())
+    const isEventCompleted = eventDate < todayStart
+
     return (
         <main className="min-h-screen bg-slate-950 p-8">
             <div className="max-w-4xl mx-auto space-y-8">
@@ -67,24 +83,24 @@ export default async function EventPage({ params }: EventPageProps) {
                             <img
                                 src={event.image}
                                 alt={event.name}
-                                className="w-full h-full object-cover opacity-60"
+                                className="w-full h-full object-cover object-top opacity-60"
                             />
                         ) : (
                             <div className="w-full h-full bg-slate-800" />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
+                        <div className="absolute" />
                         <div className="absolute bottom-0 left-0 p-8">
                             <h1 className="text-4xl font-bold text-white mb-2">{event.name}</h1>
                             <div className="flex items-center text-slate-300">
                                 <Calendar className="w-5 h-5 mr-2" />
-                                {new Date(event.date).toLocaleDateString(undefined, {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
+                                <span>
+                                    <ClientDate date={event.date} format="date" />
+                                </span>
+                                <span className="mx-2 text-slate-600">•</span>
+                                <Clock className="w-4 h-4 mr-2" />
+                                <span>
+                                    <ClientDate date={event.date} format="time" />
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -111,7 +127,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 <div className="space-y-4">
                     <h2 className="text-2xl font-semibold text-white flex items-center">
                         <span className="bg-red-600 w-1 h-8 mr-3 rounded-full"></span>
-                        Fight Card
+                        {dict.eventPage.card}
                     </h2>
 
                     <div className="space-y-3">
@@ -121,6 +137,8 @@ export default async function EventPage({ params }: EventPageProps) {
                                 fight={fight}
                                 userPick={userPicks.get(fight.id)}
                                 eventDate={event.date}
+                                isEventCompleted={isEventCompleted}
+                                dict={dict}
                             />
                         ))}
                     </div>

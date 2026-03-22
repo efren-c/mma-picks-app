@@ -35,7 +35,7 @@ export default function CreateEventPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-400">Date</label>
+                            <label className="text-sm font-medium text-slate-400">Date (Mexico City Time)</label>
                             <input
                                 type="datetime-local"
                                 name="date"

@@ -4,16 +4,37 @@ import { prisma } from '@/lib/prisma'
 import { randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
+import { sendPasswordResetEmail } from '@/lib/email'
+import { headers } from 'next/headers'
+import { passwordResetRateLimit } from '@/lib/rate-limit'
+import {
+    PasswordResetRequestSchema,
+    PasswordResetSchema,
+    EmailVerificationTokenSchema,
+} from '@/lib/validation-schemas'
+
 
 export async function requestPasswordReset(
     prevState: { message?: string } | undefined,
     formData: FormData
 ) {
-    const email = formData.get('email')
+    const ip = (await headers()).get('x-forwarded-for') || 'unknown'
+    const { success } = await passwordResetRateLimit.limit(ip)
 
-    if (!email || typeof email !== 'string') {
-        return { message: 'Invalid email' }
+    if (!success) {
+        return { message: 'Too many password reset attempts. Please try again later.' }
     }
+
+    const validatedFields = PasswordResetRequestSchema.safeParse({
+        email: formData.get('email'),
+    })
+
+    if (!validatedFields.success) {
+        const firstError = Object.values(validatedFields.error.flatten().fieldErrors)[0]
+        return { message: firstError?.[0] || 'Invalid email' }
+    }
+
+    const { email } = validatedFields.data
 
     const user = await prisma.user.findUnique({
         where: { email },
@@ -36,12 +57,17 @@ export async function requestPasswordReset(
         },
     })
 
-    // Log link to console for now
-    const resetLink = `http://localhost:3000/reset-password/${token}`
-    console.log('----------------------------------------')
-    console.log('PASSWORD RESET LINK:')
-    console.log(resetLink)
-    console.log('----------------------------------------')
+    // Send email via Resend
+    const emailResult = await sendPasswordResetEmail({
+        to: user.email,
+        resetToken: token,
+        username: user.username,
+    })
+
+    if (!emailResult.success) {
+        console.error('Failed to send password reset email:', emailResult.error)
+        // Still return success message for security (don't reveal email exists)
+    }
 
     return { message: 'If an account exists with this email, you will receive a password reset link.' }
 }
@@ -51,20 +77,17 @@ export async function resetPassword(
     prevState: { message?: string } | undefined,
     formData: FormData
 ) {
-    const password = formData.get('password')
-    const confirmPassword = formData.get('confirmPassword')
+    const validatedFields = PasswordResetSchema.safeParse({
+        password: formData.get('password'),
+        confirmPassword: formData.get('confirmPassword'),
+    })
 
-    if (!password || !confirmPassword || typeof password !== 'string' || typeof confirmPassword !== 'string') {
-        return { message: 'Invalid inputs' }
+    if (!validatedFields.success) {
+        const firstError = Object.values(validatedFields.error.flatten().fieldErrors)[0]
+        return { message: firstError?.[0] || 'Invalid password' }
     }
 
-    if (password !== confirmPassword) {
-        return { message: 'Passwords do not match' }
-    }
-
-    if (password.length < 6) {
-        return { message: 'Password must be at least 6 characters' }
-    }
+    const { password } = validatedFields.data
 
     const user = await prisma.user.findUnique({
         where: { resetToken: token },
@@ -82,8 +105,36 @@ export async function resetPassword(
             password: hashedPassword,
             resetToken: null,
             resetTokenExpiry: null,
+            lastPasswordChange: new Date(),
         },
     })
 
+
     redirect('/login?reset=success')
+}
+
+export async function verifyEmail(token: string) {
+    const validatedToken = EmailVerificationTokenSchema.safeParse(token)
+
+    if (!validatedToken.success) {
+        return { success: false, message: 'Invalid verification token' }
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { verificationToken: validatedToken.data },
+    })
+
+    if (!user) {
+        return { success: false, message: 'Invalid token' }
+    }
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            emailVerified: new Date(),
+            verificationToken: null,
+        },
+    })
+
+    return { success: true, message: 'Email verified successfully' }
 }

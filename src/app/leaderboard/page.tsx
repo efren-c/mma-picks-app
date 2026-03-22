@@ -1,133 +1,103 @@
-import { prisma } from "@/lib/prisma"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trophy, Medal, Award } from "lucide-react"
+import { getGlobalLeaderboard, getEventLeaderboard, getYearlyLeaderboard } from '@/app/lib/gamification-actions';
+import { LeaderboardTable } from '@/components/LeaderboardTable';
+import { EventSelector } from '@/components/EventSelector';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default async function LeaderboardPage() {
-    const users = await prisma.user.findMany({
-        orderBy: {
-            points: 'desc'
-        },
-        select: {
-            id: true,
-            username: true,
-            points: true,
-            _count: {
-                select: {
-                    picks: true
-                }
-            }
-        },
-        take: 100 // Top 100 users
-    })
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { getDictionary } from "@/lib/i18n";
 
-    const getRankIcon = (rank: number) => {
-        switch (rank) {
-            case 1:
-                return <Trophy className="w-6 h-6 text-yellow-500" />
-            case 2:
-                return <Medal className="w-6 h-6 text-slate-400" />
-            case 3:
-                return <Award className="w-6 h-6 text-amber-700" />
-            default:
-                return <span className="text-slate-500 font-mono text-sm">#{rank}</span>
+export default async function LeaderboardPage(props: { searchParams: Promise<{ eventId?: string; year?: string }> }) {
+    const searchParams = await props.searchParams;
+    const dict = await getDictionary();
+    const events = await prisma.event.findMany({
+        select: { id: true, name: true, date: true },
+        orderBy: { date: 'desc' }
+    });
+
+    let targetEventId = searchParams?.eventId;
+    let targetYear = searchParams?.year ? parseInt(searchParams.year) : new Date().getFullYear();
+    const isAllTime = searchParams?.year === 'all-time';
+
+    const years = Array.from(new Set(events.map(e => new Date(e.date).getFullYear()))).sort((a, b) => b - a);
+
+    // Filter events for the selected year
+    const filteredEvents = isAllTime
+        ? events
+        : events.filter(e => new Date(e.date).getFullYear() === targetYear);
+
+    // Smart default: If no specific event request, check for "active" event within the selected year
+    if (!targetEventId && !isAllTime) {
+        const now = new Date();
+        const recentLimit = new Date(now.getTime() - 8 * 60 * 60 * 1000);
+
+        // Find the most recent event that has started AND is in the selected year
+        const activeEvent = filteredEvents.find(e => e.date < now && e.date > recentLimit);
+
+        if (activeEvent) {
+            targetEventId = activeEvent.id;
         }
     }
 
+    let leaderboard;
+    let title: string = isAllTime ? dict.leaderboard.globalTitle : `${targetYear} ${dict.leaderboard.titleSuffix}`;
+    let description: string = isAllTime ? dict.leaderboard.globalDescription : `${dict.leaderboard.eventDescription} ${targetYear}`;
+
+    // Handle leaderboard data fetching
+    if (targetEventId && targetEventId !== 'global' && targetEventId !== 'season') {
+        leaderboard = await getEventLeaderboard(targetEventId);
+        const event = events.find(e => e.id === targetEventId);
+        if (event) {
+            title = `${dict.leaderboard.titleSuffix}`;
+            description = `${dict.leaderboard.eventDescription} ${event.name}`;
+        }
+    } else if (isAllTime) {
+        leaderboard = await getGlobalLeaderboard();
+        title = dict.leaderboard.globalTitle;
+        description = dict.leaderboard.globalDescription;
+    } else {
+        // Yearly leaderboard (Season)
+        leaderboard = await getYearlyLeaderboard(targetYear);
+        // Ensure title reflects "Season" with correct localization
+        title = dict.leaderboard.seasonTitle.replace('{year}', targetYear.toString());
+    }
+
+    const session = await auth();
+    let currentUserId: string | undefined;
+
+    if (session?.user?.email) {
+        const user = await prisma.user.findUnique({
+            where: { email: session.user.email },
+            select: { id: true }
+        });
+        currentUserId = user?.id;
+    }
+
     return (
-        <main className="min-h-screen bg-slate-950 p-8">
-            <div className="max-w-4xl mx-auto space-y-8">
-                <div className="text-center space-y-2">
-                    <h1 className="text-4xl font-bold text-white flex items-center justify-center gap-3">
-                        <Trophy className="w-10 h-10 text-yellow-500" />
-                        Leaderboard
-                    </h1>
-                    <p className="text-slate-400">Top fighters in the prediction game</p>
-                </div>
-
-                <Card className="bg-slate-900/50 border-slate-800">
-                    <CardHeader>
-                        <CardTitle className="text-white">Rankings</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {users.length === 0 ? (
-                            <div className="text-center text-slate-500 py-8">
-                                No users yet. Be the first to make picks!
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                {users.map((user, index) => {
-                                    const rank = index + 1
-                                    const isTopThree = rank <= 3
-
-                                    return (
-                                        <div
-                                            key={user.id}
-                                            className={`
-                        flex items-center justify-between p-4 rounded-lg transition-colors
-                        ${isTopThree
-                                                    ? 'bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-slate-700'
-                                                    : 'bg-slate-900/30 hover:bg-slate-800/30'}
-                      `}
-                                        >
-                                            <div className="flex items-center gap-4 flex-1">
-                                                <div className="w-12 flex items-center justify-center">
-                                                    {getRankIcon(rank)}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="font-semibold text-white">
-                                                        {user.username}
-                                                    </div>
-                                                    <div className="text-sm text-slate-400">
-                                                        {user._count.picks} {user._count.picks === 1 ? 'pick' : 'picks'}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="text-2xl font-bold text-green-500">
-                                                    {user.points}
-                                                </div>
-                                                <div className="text-xs text-slate-500">points</div>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* Stats Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="bg-slate-900/30 border-slate-800">
-                        <CardContent className="pt-6">
-                            <div className="text-center">
-                                <div className="text-3xl font-bold text-white">{users.length}</div>
-                                <div className="text-sm text-slate-400">Total Players</div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-slate-900/30 border-slate-800">
-                        <CardContent className="pt-6">
-                            <div className="text-center">
-                                <div className="text-3xl font-bold text-yellow-500">
-                                    {users[0]?.points || 0}
-                                </div>
-                                <div className="text-sm text-slate-400">Highest Score</div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-slate-900/30 border-slate-800">
-                        <CardContent className="pt-6">
-                            <div className="text-center">
-                                <div className="text-3xl font-bold text-blue-500">
-                                    {users.reduce((sum, u) => sum + u._count.picks, 0)}
-                                </div>
-                                <div className="text-sm text-slate-400">Total Picks</div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+        <div className="container mx-auto py-8 max-w-4xl space-y-6">
+            <div className="flex justify-end">
+                <EventSelector
+                    events={filteredEvents}
+                    years={years}
+                    selectedEventId={targetEventId}
+                    selectedYear={isAllTime ? 'all-time' : targetYear.toString()}
+                    dict={dict}
+                />
             </div>
-        </main>
-    )
+
+            <Card className="bg-slate-900/50 border-slate-800">
+                <CardHeader>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <CardTitle className="text-2xl font-bold text-white">{title}</CardTitle>
+                            <CardDescription className="text-slate-400">{description}</CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <LeaderboardTable users={leaderboard} currentUserId={currentUserId} dict={dict} />
+                </CardContent>
+            </Card>
+        </div>
+    );
 }
