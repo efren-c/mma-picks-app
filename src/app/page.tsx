@@ -3,9 +3,22 @@ import { EventCard } from "@/components/EventCard"
 import { getDictionary } from "@/lib/i18n"
 import { formatInTimeZone } from 'date-fns-tz'
 
+import Link from "next/link"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+
 export const dynamic = 'force-dynamic'
 
-export default async function Home() {
+interface HomeProps {
+    searchParams: Promise<{
+        page?: string
+    }>
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const { page } = await searchParams
+  const currentPage = Math.max(1, parseInt(page || "1", 10))
+  const pageSize = 6
+
   const dict = await getDictionary()
   const events = await prisma.event.findMany({
     orderBy: { date: 'asc' },
@@ -33,6 +46,10 @@ export default async function Home() {
   const pastEvents = events.filter(event => {
     return formatInTimeZone(event.date, timeZone, 'yyyy-MM-dd') < todayStr
   }).reverse()
+
+  const totalPastEvents = pastEvents.length
+  const totalPages = Math.ceil(totalPastEvents / pageSize)
+  const paginatedPastEvents = pastEvents.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
     <main className="min-h-screen bg-slate-950 p-8">
@@ -107,7 +124,7 @@ export default async function Home() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pastEvents.map((event) => (
+              {paginatedPastEvents.map((event) => (
                 <EventCard
                   key={event.id}
                   id={event.id}
@@ -119,6 +136,45 @@ export default async function Home() {
                 />
               ))}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-8 gap-4">
+                {currentPage > 1 ? (
+                  <Link
+                    href={`/?page=${currentPage - 1}`}
+                    className="flex items-center gap-2 px-4 py-2 border border-slate-700 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-lg transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </Link>
+                ) : (
+                  <button disabled className="flex items-center gap-2 px-4 py-2 border border-slate-800 bg-slate-900/50 text-slate-600 rounded-lg cursor-not-allowed">
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </button>
+                )}
+                
+                <span className="text-slate-500 text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                {currentPage < totalPages ? (
+                  <Link
+                    href={`/?page=${currentPage + 1}`}
+                    className="flex items-center gap-2 px-4 py-2 border border-slate-700 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-lg transition-colors"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <button disabled className="flex items-center gap-2 px-4 py-2 border border-slate-800 bg-slate-900/50 text-slate-600 rounded-lg cursor-not-allowed">
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            )}
           </section>
         )}
       </div>
