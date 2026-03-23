@@ -25,6 +25,7 @@ model User {
   resetToken String? @unique
   resetTokenExpiry DateTime?
   lastPasswordChange DateTime?
+  tokenVersion  Int      @default(0)
   picks     Pick[]
   badges    UserBadge[]
 }

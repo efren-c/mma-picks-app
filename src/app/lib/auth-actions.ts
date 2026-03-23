@@ -138,3 +138,16 @@ export async function verifyEmail(token: string) {
 
     return { success: true, message: 'Email verified successfully' }
 }
+
+/**
+ * Revokes all active sessions for a user by incrementing their tokenVersion.
+ * On the next request, the JWT callback will detect the version mismatch and
+ * invalidate the session — effectively logging them out everywhere.
+ */
+export async function revokeAllSessions(userId: string) {
+    await prisma.user.update({
+        where: { id: userId },
+        data: { tokenVersion: { increment: 1 } },
+    })
+}
+
