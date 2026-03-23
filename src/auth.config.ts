@@ -4,6 +4,9 @@ export const authConfig = {
     pages: {
         signIn: '/login',
     },
+    session: {
+        maxAge: 7 * 24 * 60 * 60, // 7 days in seconds — absolute hard expiry
+    },
     callbacks: {
         async jwt({ token, user, trigger }) {
             if (trigger === 'signIn' || trigger === 'signUp') {

@@ -1,0 +1,1 @@
+-- Prisma migration: add tokenVersion to User for global logout support
