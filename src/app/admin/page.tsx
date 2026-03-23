@@ -3,8 +3,15 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ClientDate } from '@/components/ClientDate'
+import { auth } from '@/auth'
 
 export default async function AdminPage() {
+    const session = await auth()
+    const currentUser = session?.user?.email
+        ? await prisma.user.findUnique({ where: { email: session.user.email }, select: { role: true } })
+        : null
+    const isScorekeeper = currentUser?.role === 'SCOREKEEPER'
+
     const events = await prisma.event.findMany({
         orderBy: { date: 'desc' },
         include: {
@@ -16,11 +23,13 @@ export default async function AdminPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-white">Events</h1>
-                <Link href="/admin/events/create">
-                    <Button className="bg-green-600 hover:bg-green-700">
-                        Create New Event
-                    </Button>
-                </Link>
+                {!isScorekeeper && (
+                    <Link href="/admin/events/create">
+                        <Button className="bg-green-600 hover:bg-green-700">
+                            Create New Event
+                        </Button>
+                    </Link>
+                )}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -39,7 +39,8 @@ export const authConfig = {
             });
 
             if (isOnAdmin) {
-                if (isLoggedIn && auth?.user?.role === 'ADMIN') return true;
+                const role = auth?.user?.role
+                if (isLoggedIn && (role === 'ADMIN' || role === 'SCOREKEEPER')) return true;
                 return false; // Redirect unauthorized users
             }
 

@@ -29,6 +29,11 @@ interface Event {
     fights: Fight[]
 }
 
+interface Props {
+    event: Event
+    userRole: string
+}
+
 function SubmitButton({ children, className, ...props }: React.ComponentProps<typeof Button>) {
     const { pending } = useFormStatus()
 
@@ -334,7 +339,8 @@ function EditFightForm({ fight, eventId, onCancel }: { fight: Fight; eventId: st
     )
 }
 
-export default function EventManagementClient({ event }: { event: Event }) {
+export default function EventManagementClient({ event, userRole }: Props) {
+    const isScorekeeper = userRole === 'SCOREKEEPER'
     const [isEditingEvent, setIsEditingEvent] = useState(false)
     const [editingFightId, setEditingFightId] = useState<string | null>(null)
     const router = useRouter()
@@ -385,7 +391,7 @@ export default function EventManagementClient({ event }: { event: Event }) {
                     <Card className="border-slate-800 bg-slate-900/50">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="text-white">Event Details</CardTitle>
-                            {!isEditingEvent && (
+                            {!isEditingEvent && !isScorekeeper && (
                                 <div className="flex gap-2">
                                     <Button
                                         onClick={() => setIsEditingEvent(true)}
@@ -431,7 +437,7 @@ export default function EventManagementClient({ event }: { event: Event }) {
                         </CardContent>
                     </Card>
 
-                    <AddFightForm eventId={event.id} />
+                    {!isScorekeeper && <AddFightForm eventId={event.id} />}
                 </div>
 
                 <div>
@@ -467,7 +473,7 @@ export default function EventManagementClient({ event }: { event: Event }) {
                                                         </>
                                                     )}
                                                 </div>
-                                                {editingFightId !== fight.id && (
+                                                {editingFightId !== fight.id && !isScorekeeper && (
                                                     <div className="flex gap-2">
                                                         <div className="flex mr-2 items-center gap-1">
                                                             <Button

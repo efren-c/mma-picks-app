@@ -24,6 +24,23 @@ async function requireAdmin() {
     return user
 }
 
+async function requireAdminOrScorekeeper() {
+    const session = await auth()
+    if (!session?.user?.email) {
+        redirect('/login')
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+    })
+
+    if (user?.role !== 'ADMIN' && user?.role !== 'SCOREKEEPER') {
+        redirect('/')
+    }
+
+    return user
+}
+
 
 
 export async function createEvent(
@@ -221,7 +238,7 @@ export async function updateFightResult(
     prevState: { message?: string } | undefined,
     formData: FormData
 ) {
-    await requireAdmin()
+    await requireAdminOrScorekeeper()
 
     const validatedFields = ResultSchema.safeParse({
         winner: formData.get('winner'),
