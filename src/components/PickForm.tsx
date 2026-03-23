@@ -275,7 +275,7 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
                             <button
                                 onClick={handleSubmit}
                                 disabled={!winner || !method || (method !== 'DEC' && !round) || isSubmitting}
-                                className={`w-full py-3 font-bold uppercase tracking-widest rounded-lg transition-all shadow-md active:scale-[0.98] text-sm disabled:opacity-50 disabled:cursor-not-allowed
+                                className={`w-full py-3 font-bold uppercase tracking-widest rounded-lg transition-all shadow-md active:scale-[0.98] text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
                                 ${userHasChanges()
                                         ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 shadow-red-900/20 text-white'
                                         : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 shadow-green-900/20 text-white'
