@@ -1,6 +1,6 @@
 import { getDictionary, getLocale } from "@/lib/i18n"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trophy, Target, Clock, Lock, CheckCircle2 } from "lucide-react"
+import { Trophy, Target, Clock, Lock, CheckCircle2, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { prisma } from "@/lib/prisma"
@@ -95,13 +95,40 @@ export default async function HowToPlay() {
                     </div>
 
                     {/* Perfect Pick Banner */}
-                    <div className="mt-6 p-6 rounded-lg bg-gradient-to-r from-green-900/20 to-emerald-900/20 border border-green-900/50 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
-                        <div className="p-3 bg-green-500/20 rounded-full shrink-0">
-                            <CheckCircle2 className="w-8 h-8 text-green-500" />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-white mb-1">{dict.howToPlay.perfectPickTitle}</h3>
-                            <p className="text-slate-300">{dict.howToPlay.perfectPickDesc}</p>
+                    <div className="mt-12 relative group rounded-2xl overflow-hidden">
+                        {/* Animated gradient background */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 opacity-20 group-hover:opacity-30 transition-opacity duration-500 blur-xl"></div>
+                        
+                        <div className="relative p-1 rounded-2xl bg-gradient-to-r from-amber-500/30 via-orange-500/30 to-red-500/30">
+                            <div className="flex flex-col md:flex-row items-center gap-8 p-8 bg-slate-950/90 backdrop-blur-xl rounded-xl border border-white/5 relative overflow-hidden">
+                                {/* Sparkle/glow effects */}
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 blur-3xl rounded-full -mr-16 -mt-16 pointer-events-none" />
+                                <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 blur-3xl rounded-full -ml-16 -mb-16 pointer-events-none" />
+
+                                <div className="relative z-10 p-4 bg-gradient-to-br from-amber-500/20 to-orange-600/20 rounded-2xl border border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.2)] shrink-0 group-hover:scale-110 transition-transform duration-500">
+                                    <Trophy className="w-12 h-12 text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
+                                </div>
+                                <div className="relative z-10 flex-1 text-center md:text-left">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm font-semibold tracking-wider uppercase mb-3">
+                                        <Sparkles className="w-4 h-4" />
+                                        Max Points
+                                    </div>
+                                    <h3 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-orange-400 mb-2">
+                                        {dict.howToPlay.perfectPickTitle}
+                                    </h3>
+                                    <p className="text-lg text-slate-300 font-medium">
+                                        {dict.howToPlay.perfectPickDesc}
+                                    </p>
+                                </div>
+                                <div className="relative z-10 shrink-0 mt-4 md:mt-0 text-center md:text-right">
+                                    <span className="block text-5xl font-black text-white drop-shadow-[0_0_20px_rgba(251,191,36,0.3)] group-hover:text-amber-300 transition-colors duration-300">
+                                        10
+                                    </span>
+                                    <span className="text-amber-400 font-semibold uppercase tracking-widest text-sm">
+                                        Points
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
