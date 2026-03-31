@@ -167,16 +167,33 @@ export default async function EventPage({ params }: EventPageProps) {
                     </h2>
 
                     <div className="space-y-3">
-                        {event.fights.map((fight) => (
-                            <FightRow
-                                key={fight.id}
-                                fight={fight}
-                                userPick={userPicks.get(fight.id)}
-                                eventDate={event.date}
-                                isEventCompleted={isEventCompleted}
-                                dict={dict}
-                            />
-                        ))}
+                        {event.fights.map((fight) => {
+                            const pick = userPicks.get(fight.id);
+                            return (
+                                <FightRow
+                                    key={fight.id}
+                                    fight={{
+                                        id: fight.id,
+                                        fighterA: fight.fighterA,
+                                        fighterB: fight.fighterB,
+                                        order: fight.order,
+                                        scheduledRounds: fight.scheduledRounds,
+                                        winner: fight.winner,
+                                        method: fight.method,
+                                        round: fight.round
+                                    }}
+                                    userPick={pick ? {
+                                        winner: pick.winner,
+                                        method: pick.method,
+                                        round: pick.round,
+                                        points: pick.points
+                                    } : null}
+                                    eventDate={event.date}
+                                    isEventCompleted={isEventCompleted}
+                                    dict={dict}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
             </div>
