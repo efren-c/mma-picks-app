@@ -97,7 +97,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
             // ── 2. On subsequent validate calls: check refresh token validity ──────
             if (token.sub && token.refreshToken) {
                 try {
-                    const stored = await redis.get<string>(`refresh:${token.refreshToken}`)
+                    const stored = await redis.get<any>(`refresh:${token.refreshToken}`)
 
                     // Refresh token not found in Redis (expired or revoked) → sign out
                     if (!stored) {
@@ -105,7 +105,8 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                         return null
                     }
 
-                    const { userId, tokenVersion } = JSON.parse(stored) as {
+                    const data = typeof stored === 'string' ? JSON.parse(stored) : stored;
+                    const { userId, tokenVersion } = data as {
                         userId: string
                         tokenVersion: number
                     }
