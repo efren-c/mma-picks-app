@@ -77,6 +77,8 @@ export const es = {
         upcoming: "PRÓXIMAMENTE",
         today: "HOY",
         tomorrow: "MAÑANA",
+        picksLock: "Cierre de Picks:",
+        picksLocked: "Picks cerrados",
     },
     eventPage: {
         card: "Cartelera"
@@ -96,7 +98,7 @@ export const es = {
         lockingTitle: "Bloqueo de Picks",
         lockingDesc: "Las predicciones se bloquean exactamente a la hora marcada del inicio del evento",
         cta: "¡Haz tus Picks!",
-        timeZoneNote: "Se utiliza la hora estándar global para todos los eventos.",
+        timeZoneNote: "Los horarios se muestran automáticamente en tu zona horaria local.",
         winnerTitle: "Ganador",
         methodTitle: "Método",
         roundTitle: "Ronda",

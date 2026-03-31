@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Trophy, Clock } from "lucide-react"
+import { Calendar, Trophy, Clock, Lock } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { isToday, isTomorrow } from "date-fns"
@@ -16,9 +16,11 @@ interface EventCardProps {
     labels?: {
         liveNow: string
         today: string
-        tomorrow: string
+        tomorrow?: string
         completed: string
         upcoming: string
+        picksLock?: string
+        picksLocked?: string
     }
 }
 
@@ -101,7 +103,7 @@ export function EventCard({ id, name, date, image, slug, labels }: EventCardProp
         switch (status) {
             case 'LIVE': return l.liveNow
             case 'TODAY': return l.today
-            case 'TOMORROW': return l.tomorrow
+            case 'TOMORROW': return l.tomorrow || 'TOMORROW'
             case 'PAST': return l.completed
             default: return l.upcoming
         }
@@ -148,19 +150,39 @@ export function EventCard({ id, name, date, image, slug, labels }: EventCardProp
                         <CardTitle className={`text-xl ${status === 'PAST' ? 'text-slate-400' : 'text-white'}`}>{name}</CardTitle>
                     </CardHeader>
                     <CardContent className="mt-auto p-4 pt-0">
-                        <div className="flex items-center text-slate-400 text-sm">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            <span>
-                                <ClientDate date={date} format="date" />
-                            </span>
-                            {(status === 'LIVE' || status === 'TODAY' || status === 'TOMORROW' || status === 'UPCOMING') && (
-                                <>
-                                    <span className="mx-2 text-slate-600">•</span>
-                                    <Clock className="w-4 h-4 mr-2" />
+                        <div className="flex flex-col gap-2">
+                            {status === 'PAST' ? (
+                                <div className="flex items-center text-slate-400 text-sm">
+                                    <Calendar className="w-4 h-4 mr-2" />
                                     <span>
-                                        <ClientDate date={date} format="time" />
+                                        <ClientDate date={date} format="date" />
                                     </span>
-                                </>
+                                </div>
+                            ) : status === 'LIVE' ? (
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center text-slate-400 text-sm">
+                                        <Calendar className="w-4 h-4 mr-2" />
+                                        <span><ClientDate date={date} format="date" /></span>
+                                    </div>
+                                    <div className="flex items-center text-red-500 text-sm font-semibold bg-red-500/10 px-2.5 py-1.5 rounded-md w-fit border border-red-500/20">
+                                        <Lock className="w-4 h-4 mr-2" />
+                                        <span>{labels?.picksLocked || "Picks locked"}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center flex-wrap gap-x-3 gap-y-2 text-slate-300 text-sm font-medium bg-slate-800 px-3 py-2.5 rounded-md w-full border border-slate-700 shadow-inner">
+                                    <div className="flex items-center text-slate-400">
+                                        <Lock className="w-4 h-4 mr-2" />
+                                        <span className="font-semibold">{labels?.picksLock || "Picks Lock:"}</span>
+                                    </div>
+                                    <div className="flex items-center text-slate-200 bg-slate-900/50 px-2 py-1 rounded w-fit text-xs gap-1.5 border border-slate-700">
+                                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                        <ClientDate date={date} format="date" />
+                                        <span className="text-slate-600">|</span>
+                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                        <ClientDate date={date} format="time" />
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </CardContent>

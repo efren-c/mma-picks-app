@@ -77,6 +77,8 @@ export const en = {
         upcoming: "UPCOMING",
         today: "TODAY",
         tomorrow: "TOMORROW",
+        picksLock: "Picks Lock:",
+        picksLocked: "Picks locked",
     },
     eventPage: {
         card: "Fight Card"
@@ -95,7 +97,7 @@ export const en = {
         perfectPickDesc: "Get everything right for a maximum of 10 points!",
         lockingTitle: "Locking Rules",
         lockingDesc: "Picks are locked exactly when the event starts.",
-        timeZoneNote: "Global Standard Time is used for all events.",
+        timeZoneNote: "Times are automatically displayed in your local time zone.",
         cta: "Make your picks!",
         winnerTitle: "Winner",
         methodTitle: "Method",
