@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Trophy, Clock } from "lucide-react"
+import { Calendar, Trophy, Clock, Lock } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { isToday, isTomorrow } from "date-fns"
@@ -16,9 +16,10 @@ interface EventCardProps {
     labels?: {
         liveNow: string
         today: string
-        tomorrow: string
         completed: string
         upcoming: string
+        picksLock?: string
+        picksLocked?: string
     }
 }
 
@@ -148,19 +149,27 @@ export function EventCard({ id, name, date, image, slug, labels }: EventCardProp
                         <CardTitle className={`text-xl ${status === 'PAST' ? 'text-slate-400' : 'text-white'}`}>{name}</CardTitle>
                     </CardHeader>
                     <CardContent className="mt-auto p-4 pt-0">
-                        <div className="flex items-center text-slate-400 text-sm">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            <span>
-                                <ClientDate date={date} format="date" />
-                            </span>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-center text-slate-400 text-sm">
+                                <Calendar className="w-4 h-4 mr-2" />
+                                <span>
+                                    <ClientDate date={date} format="date" />
+                                </span>
+                            </div>
                             {(status === 'LIVE' || status === 'TODAY' || status === 'TOMORROW' || status === 'UPCOMING') && (
-                                <>
-                                    <span className="mx-2 text-slate-600">•</span>
-                                    <Clock className="w-4 h-4 mr-2" />
-                                    <span>
-                                        <ClientDate date={date} format="time" />
-                                    </span>
-                                </>
+                                status === 'LIVE' ? (
+                                    <div className="flex items-center text-red-500 text-sm font-semibold bg-red-500/10 px-2.5 py-1.5 rounded-md w-fit border border-red-500/20">
+                                        <Lock className="w-4 h-4 mr-2" />
+                                        <span>{labels?.picksLocked || "Picks locked"}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center text-amber-500 text-sm font-semibold bg-amber-500/10 px-2.5 py-1.5 rounded-md w-fit border border-amber-500/20">
+                                        <Clock className="w-4 h-4 mr-2" />
+                                        <span>
+                                            {labels?.picksLock || "Picks Lock:"} <ClientDate date={date} format="time" />
+                                        </span>
+                                    </div>
+                                )
                             )}
                         </div>
                     </CardContent>

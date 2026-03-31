@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
-import { Clock, Calendar, Trophy } from "lucide-react"
+import { Clock, Calendar, Trophy, Lock } from "lucide-react"
 import { FightRow } from "@/components/FightRow"
 import { auth } from "@/auth"
 import { Card } from "@/components/ui/card"
@@ -91,16 +91,37 @@ export default async function EventPage({ params }: EventPageProps) {
                         <div className="absolute" />
                         <div className="absolute bottom-0 left-0 p-8">
                             <h1 className="text-4xl font-bold text-white mb-2">{event.name}</h1>
-                            <div className="flex items-center text-slate-300">
-                                <Calendar className="w-5 h-5 mr-2" />
-                                <span>
-                                    <ClientDate date={event.date} format="date" />
-                                </span>
-                                <span className="mx-2 text-slate-600">•</span>
-                                <Clock className="w-4 h-4 mr-2" />
-                                <span>
-                                    <ClientDate date={event.date} format="time" />
-                                </span>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-4">
+                                <div className="flex items-center text-slate-300 text-lg">
+                                    <Calendar className="w-5 h-5 mr-2" />
+                                    <span>
+                                        <ClientDate date={event.date} format="date" />
+                                    </span>
+                                </div>
+                                {!isEventCompleted ? (
+                                    eventDate <= now ? (
+                                        <div className="flex items-center text-base font-semibold px-3 py-1.5 rounded-lg w-fit border shadow-lg text-red-400 bg-red-400/10 border-red-400/20 backdrop-blur-sm">
+                                            <Lock className="w-5 h-5 mr-2" />
+                                            <span>
+                                                {dict.pickForm.lockedMessage || "Event started, picks locked."}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center text-base font-semibold px-3 py-1.5 rounded-lg w-fit border shadow-lg text-amber-400 bg-amber-400/10 border-amber-400/20 backdrop-blur-sm">
+                                            <Clock className="w-5 h-5 mr-2" />
+                                            <span>
+                                                {dict.eventCard.picksLock || "Picks Lock:"} <ClientDate date={event.date} format="time" />
+                                            </span>
+                                        </div>
+                                    )
+                                ) : (
+                                    <div className="flex items-center text-base font-semibold px-3 py-1.5 rounded-lg w-fit border shadow-lg text-slate-400 bg-slate-800/50 border-slate-700">
+                                        <Clock className="w-5 h-5 mr-2" />
+                                        <span>
+                                            <ClientDate date={event.date} format="time" />
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
