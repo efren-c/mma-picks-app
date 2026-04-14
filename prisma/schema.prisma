@@ -28,6 +28,7 @@ model User {
   tokenVersion  Int      @default(0)
   picks     Pick[]
   badges    UserBadge[]
+  eventResults UserEventResult[]
 }
 
 model Event {
@@ -36,7 +37,26 @@ model Event {
   slug      String?  @unique
   date      DateTime
   image     String?  // URL to event poster
+  isFinished Boolean @default(false)
   fights    Fight[]
+  userResults UserEventResult[]
+}
+
+model UserEventResult {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id])
+  score        Int
+  rank         Int
+  totalPlayers Int
+  isPersonalBest Boolean @default(false)
+  isPersonalWorst Boolean @default(false)
+  seen         Boolean @default(false)
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, eventId])
 }
 
 model Fight {

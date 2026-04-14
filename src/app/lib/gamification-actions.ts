@@ -229,3 +229,106 @@ async function awardBadge(userId: string, badgeName: string) {
         });
     }
 }
+
+export async function finalizeEventResults(eventId: string) {
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    if (!event || event.isFinished) return;
+
+    // Get all users who made picks for this event
+    const users = await prisma.user.findMany({
+        where: {
+            picks: {
+                some: {
+                    fight: { eventId }
+                }
+            }
+        },
+        select: {
+            id: true,
+            picks: {
+                where: { fight: { eventId } },
+                select: { points: true }
+            },
+            eventResults: {
+                select: { score: true }
+            }
+        }
+    });
+
+    if (users.length === 0) {
+        await prisma.event.update({ where: { id: eventId }, data: { isFinished: true } });
+        return;
+    }
+
+    // Calculate score for each user for this event
+    const userScores = users.map(user => {
+        const score = user.picks.reduce((sum, pick) => sum + (pick.points || 0), 0);
+        return {
+            userId: user.id,
+            score,
+            pastScores: user.eventResults.map(r => r.score)
+        };
+    });
+
+    // Sort users by score descending to assign ranks
+    userScores.sort((a, b) => b.score - a.score);
+
+    const totalPlayers = userScores.length;
+    let currentRank = 1;
+    let prevScore = -1;
+    let rankOffset = 0;
+
+    const resultsToCreate = [];
+
+    for (let i = 0; i < userScores.length; i++) {
+        const userStats = userScores[i];
+        
+        if (i === 0) {
+            currentRank = 1;
+            rankOffset = 1;
+            prevScore = userStats.score;
+        } else {
+            if (userStats.score === prevScore) {
+                rankOffset++;
+            } else {
+                currentRank += rankOffset;
+                rankOffset = 1;
+                prevScore = userStats.score;
+            }
+        }
+
+        // Calculate Personal Best/Worst
+        let isPersonalBest = false;
+        let isPersonalWorst = false;
+
+        // Only calculate best/worst if they've played at least 1 other event
+        if (userStats.pastScores.length >= 1) {
+            const maxPast = Math.max(...userStats.pastScores);
+            const minPast = Math.min(...userStats.pastScores);
+            
+            if (userStats.score > maxPast) isPersonalBest = true;
+            if (userStats.score < minPast) isPersonalWorst = true;
+        }
+
+        resultsToCreate.push({
+            userId: userStats.userId,
+            eventId: eventId,
+            score: userStats.score,
+            rank: currentRank,
+            totalPlayers: totalPlayers,
+            isPersonalBest,
+            isPersonalWorst
+        });
+    }
+
+    // Save all results and mark event as finished
+    await prisma.$transaction([
+        prisma.userEventResult.createMany({
+            data: resultsToCreate
+        }),
+        prisma.event.update({
+            where: { id: eventId },
+            data: { isFinished: true }
+        })
+    ]);
+}

@@ -122,7 +122,7 @@ function FightResultForm({ fight, eventId }: { fight: Fight; eventId: string }) 
         undefined
     )
 
-    const isDecision = selectedMethod === 'DEC'
+    const isNoRound = selectedMethod === 'DEC' || selectedMethod === 'DRAW'
 
     return (
         <form action={dispatch} className="space-y-3">
@@ -138,6 +138,7 @@ function FightResultForm({ fight, eventId }: { fight: Fight; eventId: string }) 
                         <option value="">Select</option>
                         <option value="A">{fight.fighterA}</option>
                         <option value="B">{fight.fighterB}</option>
+                        <option value="DRAW">Draw</option>
                     </select>
                 </div>
 
@@ -154,14 +155,15 @@ function FightResultForm({ fight, eventId }: { fight: Fight; eventId: string }) 
                         <option value="KO">KO/TKO</option>
                         <option value="SUB">Submission</option>
                         <option value="DEC">Decision</option>
+                        <option value="DRAW">Draw</option>
                     </select>
                 </div>
 
                 <div className="space-y-1">
                     <label className="text-xs font-medium text-slate-400">
-                        Round {isDecision && <span className="text-slate-500">(N/A)</span>}
+                        Round {isNoRound && <span className="text-slate-500">(N/A)</span>}
                     </label>
-                    {isDecision ? (
+                    {isNoRound ? (
                         <>
                             <input type="hidden" name="round" value="" />
                             <select

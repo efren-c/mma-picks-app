@@ -162,11 +162,11 @@ export const FightSchema = z.object({
 
 export const ResultSchema = z
     .object({
-        winner: z.enum(['A', 'B'], {
-            message: 'Winner must be either A or B',
+        winner: z.enum(['A', 'B', 'DRAW'], {
+            message: 'Winner must be A, B, or DRAW',
         }),
-        method: z.enum(['KO', 'SUB', 'DEC'], {
-            message: 'Method must be KO, SUB, or DEC',
+        method: z.enum(['KO', 'SUB', 'DEC', 'DRAW'], {
+            message: 'Method must be KO, SUB, DEC, or DRAW',
         }),
         round: z
             .string()
@@ -174,8 +174,8 @@ export const ResultSchema = z
     })
     .refine(
         (data) => {
-            // Round is required for KO and SUB, but not for DEC
-            if (data.method === 'DEC') return true
+            // Round is required for KO and SUB, but not for DEC or DRAW
+            if (data.method === 'DEC' || data.method === 'DRAW' || data.winner === 'DRAW') return true
             return data.round && data.round.length > 0
         },
         {
