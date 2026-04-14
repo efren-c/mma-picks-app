@@ -88,14 +88,17 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
     // Get winner name
     const getWinnerName = (winner: string | null) => {
         if (!winner) return ''
+        if (winner === 'DRAW') return 'Draw'
         return winner === 'A' ? fight.fighterA : fight.fighterB
     }
 
     return (
         <Card className={`overflow-hidden border-slate-800 ${hasFightResult && hasUserPick
-            ? isCorrectPick
-                ? 'bg-green-900/10 border-green-800/50'
-                : 'bg-red-900/10 border-red-800/50'
+            ? fight.winner === 'DRAW'
+                ? 'bg-amber-900/10 border-amber-800/50'
+                : isCorrectPick
+                    ? 'bg-green-900/10 border-green-800/50'
+                    : 'bg-red-900/10 border-red-800/50'
             : 'bg-slate-900/40'
             }`}>
             <div
@@ -121,7 +124,11 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
                     <div className="flex items-center gap-3">
                         {hasFightResult && hasUserPick && (
                             <>
-                                {isCorrectPick ? (
+                                {fight.winner === 'DRAW' ? (
+                                    <div className="flex items-center gap-2 mr-4 bg-amber-600/20 px-3 py-1 rounded-full">
+                                        <span className="text-sm font-bold text-amber-500">Draw</span>
+                                    </div>
+                                ) : isCorrectPick ? (
                                     <div className="flex items-center gap-2 mr-4 bg-green-600/20 px-3 py-1 rounded-full">
                                         <Check className="w-4 h-4 text-green-400" />
                                         <span className="text-sm font-bold text-green-400">+{points} pts</span>
@@ -167,8 +174,12 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
                                 <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
                                     <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">{dict.fightRow.officialResult}</p>
                                     <p className="text-white font-semibold">
-                                        {getWinnerName(fight.winner)} {dict.fightRow.winsVia} {formatMethod(fight.method)}
-                                        {fight.method !== 'DEC' && fight.round && ` (${dict.fightRow.round} ${fight.round})`}
+                                        {fight.winner === 'DRAW' ? (
+                                            "Fight ended in a Draw"
+                                        ) : (
+                                            <>{getWinnerName(fight.winner)} {dict.fightRow.winsVia} {formatMethod(fight.method)}
+                                            {fight.method !== 'DEC' && fight.round && ` (${dict.fightRow.round} ${fight.round})`}</>
+                                        )}
                                     </p>
                                 </div>
                             )}

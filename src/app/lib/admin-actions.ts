@@ -267,6 +267,19 @@ export async function updateFightResult(
         const { calculatePointsForFight } = await import('@/lib/scoring')
         await calculatePointsForFight(fightId)
 
+        const updatedFight = await prisma.fight.findUnique({
+            where: { id: fightId },
+            select: { eventId: true }
+        })
+        
+        if (updatedFight) {
+            const eventFights = await prisma.fight.findMany({ where: { eventId: updatedFight.eventId } })
+            if (eventFights.length > 0 && eventFights.every(f => f.winner !== null)) {
+                const { finalizeEventResults } = await import('@/app/lib/gamification-actions')
+                await finalizeEventResults(updatedFight.eventId)
+            }
+        }
+
         revalidatePath('/admin')
         revalidatePath('/events')
         revalidatePath('/dashboard')

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Geist } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Toaster } from "sonner";
@@ -21,6 +21,11 @@ export const metadata: Metadata = {
 
 import { Providers } from "@/components/Providers";
 import { AutoLogout } from "@/components/AutoLogout";
+import { EventResultModal } from "@/components/EventResultModal";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+
 
 export default function RootLayout({
   children,
@@ -28,12 +33,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={cn("font-sans", geist.variable)}>
       <body className={inter.className}>
         <Providers>
           <AutoLogout />
           <Navbar />
           {children}
+          <EventResultModal />
           <Toaster position="top-center" richColors />
           <Analytics />
         </Providers>

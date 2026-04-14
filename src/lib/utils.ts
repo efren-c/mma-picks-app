@@ -1,19 +1,23 @@
-import { type ClassValue, clsx } from "clsx"
+import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-
 export function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs))
 }
 
-export function slugify(text: string) {
+/**
+ * Converts a string to a URL-friendly slug
+ */
+export function slugify(text: string): string {
     return text
         .toString()
         .toLowerCase()
+        .normalize('NFD') // decompose combined characters
+        .replace(/[\u0300-\u036f]/g, '') // remove diacritics
         .trim()
-        .replace(/\s+/g, '-')        // Replace spaces with -
-        .replace(/[^\w\-]+/g, '')    // Remove all non-word chars
-        .replace(/\-\-+/g, '-')      // Replace multiple - with single -
-        .replace(/^-+/, '')          // Trim - from start
-        .replace(/-+$/, '')          // Trim - from end
+        .replace(/\s+/g, '-') // replace spaces with hyphens
+        .replace(/[^\w-]+/g, '') // remove all non-word chars
+        .replace(/--+/g, '-') // replace multiple hyphens with single hyphen
+        .replace(/^-+/, '') // trim from start
+        .replace(/-+$/, '') // trim from end
 }
