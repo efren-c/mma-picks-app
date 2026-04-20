@@ -159,6 +159,29 @@ export default async function HowToPlay() {
                     </div>
                 </div>
 
+                {/* Available Picks */}
+                <div className="mb-16">
+                    <div className="flex items-center gap-3 mb-8 justify-center md:justify-start">
+                        <CheckCircle2 className="w-6 h-6 text-red-500" />
+                        <h2 className="text-2xl font-bold text-white">{dict.howToPlay.availablePicksTitle}</h2>
+                    </div>
+
+                    <div className="p-8 rounded-2xl bg-slate-900/80 border border-slate-800 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/5 blur-3xl rounded-full -mr-16 -mt-16 pointer-events-none" />
+
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+                            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 shadow-xl">
+                                <CheckCircle2 className="w-12 h-12 text-red-500" />
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-xl font-medium text-white">
+                                    {dict.howToPlay.availablePicksDesc}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* CTA */}
                 <div className="text-center">
                     <Link href={ctaHref}>

@@ -102,5 +102,7 @@ export const es = {
         winnerTitle: "Ganador",
         methodTitle: "Método",
         roundTitle: "Ronda",
+        availablePicksTitle: "Picks Disponibles",
+        availablePicksDesc: "Para la mayoría de los eventos, las picks solo estarán disponibles para la Cartelera Principal y el combate estelar de las Preliminares.",
     }
 } as const;

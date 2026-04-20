@@ -70,8 +70,8 @@ export default async function DashboardPage() {
     const rankDisplay = userRank ? `#${userRank}` : '>50'
 
     return (
-        <main className="min-h-screen bg-slate-950 p-8">
-            <div className="max-w-4xl mx-auto space-y-8">
+        <main className="min-h-screen bg-slate-950 p-4 sm:p-8">
+            <div className="w-full sm:max-w-4xl sm:mx-auto space-y-8">
                 <h1 className="text-3xl font-bold text-white">{dict.dashboard.title}</h1>
 
                 {/* Stats Overview */}

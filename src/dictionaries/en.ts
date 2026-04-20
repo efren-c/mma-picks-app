@@ -102,5 +102,7 @@ export const en = {
         winnerTitle: "Winner",
         methodTitle: "Method",
         roundTitle: "Round",
+        availablePicksTitle: "Available Picks",
+        availablePicksDesc: "For the majority of events, picks are only available for the Main Card plus the featured 'Main Event' of the Prelims.",
     }
 } as const;
