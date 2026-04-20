@@ -52,8 +52,8 @@ export default async function Home({ searchParams }: HomeProps) {
   const paginatedPastEvents = pastEvents.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
-    <main className="min-h-screen bg-slate-950 p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <main className="min-h-screen bg-slate-950 p-4 sm:p-8">
+      <div className="w-full sm:max-w-7xl sm:mx-auto space-y-8">
         <header className="flex flex-col space-y-4">
           <h1 className="text-4xl font-bold tracking-tight text-white">
             MMA <span className="text-red-600">Picks</span>

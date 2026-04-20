@@ -74,8 +74,8 @@ export default async function EventPage({ params }: EventPageProps) {
     const isEventCompleted = eventDate < todayStart
 
     return (
-        <main className="min-h-screen bg-slate-950 p-8">
-            <div className="max-w-4xl mx-auto space-y-8">
+        <main className="min-h-screen bg-slate-950 p-4 sm:p-8">
+            <div className="w-full sm:max-w-4xl sm:mx-auto space-y-8">
                 {/* Event Header */}
                 <div className="relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800">
                     <div className="h-64 w-full relative">

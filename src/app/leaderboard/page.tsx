@@ -74,7 +74,7 @@ export default async function LeaderboardPage(props: { searchParams: Promise<{ e
     }
 
     return (
-        <div className="container mx-auto py-8 max-w-4xl space-y-6">
+        <div className="w-full sm:max-w-4xl sm:mx-auto px-4 sm:px-0 py-8 space-y-6">
             <div className="flex justify-end">
                 <EventSelector
                     events={filteredEvents}
