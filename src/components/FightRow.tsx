@@ -197,6 +197,7 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
                                     isLocked={isLocked}
                                     isEventCompleted={isEventCompleted}
                                     dict={dict}
+                                    onPickSaved={(pick) => setExistingPick(pick)}
                                 />
                             )}
                         </div>
