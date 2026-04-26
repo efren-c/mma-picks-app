@@ -19,9 +19,10 @@ interface PickFormProps {
     isLocked?: boolean
     isEventCompleted?: boolean
     dict: any
+    onPickSaved?: (pick: { winner: string; method: string; round: number }) => void
 }
 
-export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existingPick, isLocked = false, isEventCompleted = false, dict }: PickFormProps) {
+export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existingPick, isLocked = false, isEventCompleted = false, dict, onPickSaved }: PickFormProps) {
 
     // State now uses DB codes directly: 'A'/'B' for winner, 'KO'/'SUB'/'DEC' for method
     // This avoids complex two-way binding of translated strings
@@ -61,12 +62,14 @@ export function PickForm({ fightId, fighterA, fighterB, scheduledRounds, existin
             toast.error(result.error)
         } else {
             // Update local saved state to reflect the success immediately
-            setSavedPick({
+            const newPick = {
                 winner: winnerCode,
                 method: method,
                 round: finalRound
-            })
+            }
+            setSavedPick(newPick)
             setHasSubmittedPick(true)
+            onPickSaved?.(newPick)
             toast.success(hasSubmittedPick ? dict.pickForm.pickUpdated : dict.pickForm.pickSavedSuccess)
         }
     }
