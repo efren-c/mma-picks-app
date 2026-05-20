@@ -3,13 +3,29 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ClientDate } from '@/components/ClientDate'
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
-export default async function AdminPage() {
+interface AdminPageProps {
+    searchParams: Promise<{
+        page?: string
+    }>
+}
+
+export default async function AdminPage({ searchParams }: AdminPageProps) {
+    const { page } = await searchParams
+    const currentPage = Math.max(1, parseInt(page || "1", 10))
+    const pageSize = 6
+
+    const totalEvents = await prisma.event.count()
+    const totalPages = Math.ceil(totalEvents / pageSize)
+
     const events = await prisma.event.findMany({
         orderBy: { date: 'desc' },
         include: {
             fights: true,
         },
+        skip: (currentPage - 1) * pageSize,
+        take: pageSize,
     })
 
     return (
@@ -48,6 +64,45 @@ export default async function AdminPage() {
                     </div>
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center mt-8 gap-4">
+                    {currentPage > 1 ? (
+                        <Link
+                            href={`/admin?page=${currentPage - 1}`}
+                            className="flex items-center gap-2 px-4 py-2 border border-slate-700 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-lg transition-colors text-sm"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                            Previous
+                        </Link>
+                    ) : (
+                        <button disabled className="flex items-center gap-2 px-4 py-2 border border-slate-800 bg-slate-900/50 text-slate-600 rounded-lg cursor-not-allowed text-sm">
+                            <ChevronLeft className="w-4 h-4" />
+                            Previous
+                        </button>
+                    )}
+                    
+                    <span className="text-slate-500 text-sm">
+                        Page {currentPage} of {totalPages}
+                    </span>
+
+                    {currentPage < totalPages ? (
+                        <Link
+                            href={`/admin?page=${currentPage + 1}`}
+                            className="flex items-center gap-2 px-4 py-2 border border-slate-700 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-lg transition-colors text-sm"
+                        >
+                            Next
+                            <ChevronRight className="w-4 h-4" />
+                        </Link>
+                    ) : (
+                        <button disabled className="flex items-center gap-2 px-4 py-2 border border-slate-800 bg-slate-900/50 text-slate-600 rounded-lg cursor-not-allowed text-sm">
+                            Next
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
