@@ -4,6 +4,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { EventSchema, FightSchema, ResultSchema } from '@/lib/validation-schemas'
 import { fromZonedTime } from 'date-fns-tz'
 
@@ -253,7 +254,7 @@ export async function updateFightResult(
     const { winner, method, round } = validatedFields.data
 
     try {
-        await prisma.fight.update({
+        const updatedFight = await prisma.fight.update({
             where: { id: fightId },
             data: {
                 winner,
@@ -261,28 +262,34 @@ export async function updateFightResult(
                 // For decisions, set round to 0; otherwise parse the round value
                 round: method === 'DEC' ? 0 : parseInt(round || '0'),
             },
+            select: { id: true, eventId: true }
         })
 
-        // Calculate points for all picks on this fight
-        const { calculatePointsForFight } = await import('@/lib/scoring')
-        await calculatePointsForFight(fightId)
-
-        const updatedFight = await prisma.fight.findUnique({
-            where: { id: fightId },
-            select: { eventId: true }
-        })
-        
-        if (updatedFight) {
-            const eventFights = await prisma.fight.findMany({ where: { eventId: updatedFight.eventId } })
-            if (eventFights.length > 0 && eventFights.every(f => f.winner !== null)) {
-                const { finalizeEventResults } = await import('@/app/lib/gamification-actions')
-                await finalizeEventResults(updatedFight.eventId)
-            }
-        }
-
+        // Revalidate admin and events paths immediately so admin UI updates without delay
         revalidatePath('/admin')
+        revalidatePath(`/admin/events/${updatedFight.eventId}`)
         revalidatePath('/events')
-        revalidatePath('/dashboard')
+
+        // Defer scoring calculations, badge checks, and event finalization to background execution
+        after(async () => {
+            try {
+                // Calculate points for all picks on this fight in batch
+                const { calculatePointsForFight } = await import('@/lib/scoring')
+                await calculatePointsForFight(fightId)
+
+                const eventFights = await prisma.fight.findMany({ where: { eventId: updatedFight.eventId } })
+                if (eventFights.length > 0 && eventFights.every(f => f.winner !== null)) {
+                    const { finalizeEventResults } = await import('@/app/lib/gamification-actions')
+                    await finalizeEventResults(updatedFight.eventId)
+                }
+
+                revalidatePath('/dashboard')
+                revalidatePath('/leaderboard')
+            } catch (bgError) {
+                console.error('Background scoring calculation error:', bgError)
+            }
+        })
+
         return { message: 'Result updated successfully' }
     } catch (error) {
         return { message: 'Failed to update result' }

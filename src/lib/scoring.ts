@@ -90,7 +90,8 @@ export async function calculatePointsForFight(fightId: string) {
         round: fight.round
     }
 
-    let updates = 0
+    // Group picks by calculated score for batch updating
+    const picksByPoints = new Map<number, string[]>()
 
     for (const pick of fight.picks) {
         // Convert pick winner from 'A'/'B' to fighter name for comparison
@@ -105,26 +106,67 @@ export async function calculatePointsForFight(fightId: string) {
         }
 
         const points = calculatePickScore(pickData, fightResult)
+        const ids = picksByPoints.get(points) || []
+        ids.push(pick.id)
+        picksByPoints.set(points, ids)
+    }
 
-        // Update pick points
-        await prisma.pick.update({
-            where: { id: pick.id },
+    // Execute batch updates for picks in a single transaction
+    const updateOperations = Array.from(picksByPoints.entries()).map(([points, ids]) =>
+        prisma.pick.updateMany({
+            where: { id: { in: ids } },
             data: { points }
         })
+    )
 
-        updates++
+    if (updateOperations.length > 0) {
+        await prisma.$transaction(updateOperations)
     }
 
     // Recalculate total points for all users who made picks on this fight
     const userIds = [...new Set(fight.picks.map(p => p.userId))]
 
-    for (const userId of userIds) {
-        await recalculateUserTotalPoints(userId)
-        // Check for badges
-        await checkAndAwardBadges(userId, fight.eventId)
+    if (userIds.length > 0) {
+        // Grouped aggregation to get total points for all affected users in 1 query
+        const userPointAggregations = await prisma.pick.groupBy({
+            by: ['userId'],
+            where: { userId: { in: userIds } },
+            _sum: { points: true }
+        })
+
+        const userUpdates = userPointAggregations.map(agg =>
+            prisma.user.update({
+                where: { id: agg.userId },
+                data: { points: agg._sum.points || 0 }
+            })
+        )
+
+        // Ensure any user without scored picks is accounted for
+        const coveredUserIds = new Set(userPointAggregations.map(a => a.userId))
+        for (const uid of userIds) {
+            if (!coveredUserIds.has(uid)) {
+                userUpdates.push(
+                    prisma.user.update({
+                        where: { id: uid },
+                        data: { points: 0 }
+                    })
+                )
+            }
+        }
+
+        if (userUpdates.length > 0) {
+            await prisma.$transaction(userUpdates)
+        }
+
+        // Pre-fetch event fights once for all badge checks
+        const eventFights = await prisma.fight.findMany({ where: { eventId: fight.eventId } })
+
+        for (const userId of userIds) {
+            await checkAndAwardBadges(userId, fight.eventId, eventFights)
+        }
     }
 
-    return { success: true, updates }
+    return { success: true, updates: fight.picks.length }
 }
 
 /**

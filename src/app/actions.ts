@@ -51,36 +51,27 @@ export async function submitPick(fightId: string, winner: string, method: string
             return { error: "Event has already started. Picks are locked." }
         }
 
-        // Check if pick already exists
-        const existingPick = await prisma.pick.findFirst({
+        // Atomic upsert for pick
+        await prisma.pick.upsert({
             where: {
+                userId_fightId: {
+                    userId: user.id,
+                    fightId
+                }
+            },
+            update: {
+                winner,
+                method,
+                round
+            },
+            create: {
                 userId: user.id,
-                fightId
+                fightId,
+                winner,
+                method,
+                round
             }
         })
-
-        if (existingPick) {
-            // Update existing pick
-            await prisma.pick.update({
-                where: { id: existingPick.id },
-                data: {
-                    winner,
-                    method,
-                    round
-                }
-            })
-        } else {
-            // Create new pick
-            await prisma.pick.create({
-                data: {
-                    userId: user.id,
-                    fightId,
-                    winner,
-                    method,
-                    round
-                }
-            })
-        }
 
         revalidatePath(`/events/${fight.eventId}`)
         revalidatePath(`/events`)

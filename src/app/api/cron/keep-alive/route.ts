@@ -6,8 +6,17 @@ const redis = new Redis({
     token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
 })
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        // Verify standard Vercel Cron request signature in production environment
+        const authHeader = request.headers.get('authorization')
+        if (
+            process.env.NODE_ENV === 'production' &&
+            authHeader !== `Bearer ${process.env.CRON_SECRET}`
+        ) {
+            return new Response('Unauthorized', { status: 401 })
+        }
+
         if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
             return NextResponse.json(
                 { success: false, error: 'Missing Upstash environment variables' },
