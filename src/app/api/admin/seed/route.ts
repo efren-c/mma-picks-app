@@ -13,8 +13,10 @@ const badges = [
 export async function POST(request: Request) {
     const { secret } = await request.json();
 
-    // Simple auth check
-    if (secret !== process.env.NEXTAUTH_SECRET) {
+    // Simple auth check using a dedicated ADMIN_API_SECRET with a fallback to NEXTAUTH_SECRET
+    const adminSecret = process.env.ADMIN_API_SECRET || process.env.NEXTAUTH_SECRET;
+
+    if (!adminSecret || secret !== adminSecret) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

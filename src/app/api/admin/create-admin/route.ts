@@ -7,7 +7,9 @@ const prisma = new PrismaClient();
 export async function POST(request: Request) {
     const { secret, email, username, password } = await request.json();
 
-    if (secret !== process.env.NEXTAUTH_SECRET) {
+    const adminSecret = process.env.ADMIN_API_SECRET || process.env.NEXTAUTH_SECRET;
+
+    if (!adminSecret || secret !== adminSecret) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

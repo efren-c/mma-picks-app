@@ -135,7 +135,7 @@ export async function getYearlyLeaderboard(year: number) {
         }));
 }
 
-export async function checkAndAwardBadges(userId: string, eventId: string) {
+export async function checkAndAwardBadges(userId: string, eventId: string, preloadedFights?: any[]) {
     const user = await prisma.user.findUnique({
         where: { id: userId },
         include: {
@@ -157,7 +157,7 @@ export async function checkAndAwardBadges(userId: string, eventId: string) {
         },
     });
 
-    if (!user) return;
+    if (!user) return [];
 
     const newBadges: string[] = [];
 
@@ -170,11 +170,10 @@ export async function checkAndAwardBadges(userId: string, eventId: string) {
 
     // 2. Perfect Event Badge (All picks correct)
     // Only check if event is fully completed
-    const eventFights = await prisma.fight.findMany({ where: { eventId } });
-    const allFightsFinished = eventFights.every((f) => f.winner !== null);
+    const eventFights = preloadedFights || await prisma.fight.findMany({ where: { eventId } });
+    const allFightsFinished = eventFights.length > 0 && eventFights.every((f: any) => f.winner !== null);
 
     if (allFightsFinished && user.picks.length === eventFights.length) {
-        const allCorrect = user.picks.every((pick) => pick.points && pick.points > 0); // Simplified check: > 0 points means some correctness, but "Perfect" usually means Winner correct.
         // Let's define Perfect as getting the Winner correct for ALL fights.
         const allWinnersCorrect = user.picks.every(pick => {
             return pick.winner === pick.fight.winner;
@@ -187,11 +186,7 @@ export async function checkAndAwardBadges(userId: string, eventId: string) {
         }
     }
 
-    // 3. Underdog Hunter (Correctly predicted an underdog)
-    // Need odds for this, but assuming we don't have odds yet, we can skip or implement a placeholder.
-    // Skipping for now as we don't have odds in schema.
-
-    // 4. Veteran (5 events)
+    // 3. Veteran (5 events)
     const distinctEvents = await prisma.pick.findMany({
         where: { userId },
         distinct: ['fightId'], // Approximation, ideally distinct eventId via relation
@@ -212,10 +207,7 @@ export async function checkAndAwardBadges(userId: string, eventId: string) {
         newBadges.push('Veteran');
     }
 
-    if (newBadges.length > 0) {
-        revalidatePath('/dashboard');
-        revalidatePath('/leaderboard');
-    }
+    return newBadges;
 }
 
 async function awardBadge(userId: string, badgeName: string) {
