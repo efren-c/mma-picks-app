@@ -33,7 +33,7 @@ export function FightRow({ fight, userPick: initialUserPick, eventDate, isEventC
     const [isExpanded, setIsExpanded] = useState(false)
     const [existingPick, setExistingPick] = useState<any>(initialUserPick || null)
     const [isLoading, setIsLoading] = useState(false)
-    const [hasLoadedPick, setHasLoadedPick] = useState(!!initialUserPick)
+    const [hasLoadedPick, setHasLoadedPick] = useState(initialUserPick !== undefined)
 
     const isLocked = new Date() > new Date(eventDate)
 

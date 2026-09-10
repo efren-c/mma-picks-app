@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Trophy, TrendingUp, TrendingDown, Star } from 'lucide-react';
@@ -21,10 +22,14 @@ interface EventResult {
 }
 
 export function EventResultModal() {
+    const { data: session, status } = useSession();
     const [results, setResults] = useState<EventResult[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
+        // Only fetch if user is authenticated
+        if (status !== 'authenticated' || !session?.user) return;
+
         const fetchResults = async () => {
             try {
                 const res = await fetch('/api/user/event-results');
@@ -39,7 +44,7 @@ export function EventResultModal() {
             }
         };
         fetchResults();
-    }, []);
+    }, [status, session]);
 
     const handleDismiss = async () => {
         const currentResult = results[currentIndex];

@@ -43,9 +43,47 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardUser[]> {
 }
 
 export async function getEventLeaderboard(eventId: string) {
-    // Calculate points for a specific event dynamically
-    // We need to sum up points from picks for this event
+    // Check if event results are already finalized
+    const savedResults = await prisma.userEventResult.findMany({
+        where: { eventId },
+        orderBy: { rank: 'asc' },
+        take: 50,
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    username: true,
+                    badges: {
+                        include: {
+                            badge: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    if (savedResults.length > 0) {
+        return savedResults.map((result) => ({
+            id: result.user.id,
+            username: result.user.username,
+            points: result.score,
+            badges: result.user.badges,
+            rank: result.rank,
+        }));
+    }
+
+    // Fallback: For in-progress / live events, only calculate for users who made picks for this event
     const users = await prisma.user.findMany({
+        where: {
+            picks: {
+                some: {
+                    fight: {
+                        eventId: eventId,
+                    },
+                },
+            },
+        },
         select: {
             id: true,
             username: true,
@@ -67,7 +105,7 @@ export async function getEventLeaderboard(eventId: string) {
         },
     });
 
-    // Calculate event points and sort
+    // Calculate event points, sort and limit to top 50
     const leaderboard = users
         .map((user) => {
             const eventPoints = user.picks.reduce((sum, pick) => sum + (pick.points || 0), 0);
@@ -79,6 +117,7 @@ export async function getEventLeaderboard(eventId: string) {
             };
         })
         .sort((a, b) => b.points - a.points)
+        .slice(0, 50)
         .map((user, index) => ({
             ...user,
             rank: index + 1,
@@ -91,7 +130,22 @@ export async function getYearlyLeaderboard(year: number) {
     const startDate = new Date(`${year}-01-01T00:00:00.000Z`);
     const endDate = new Date(`${year + 1}-01-01T00:00:00.000Z`);
 
+    // Only query users who have picks in the target year
     const users = await prisma.user.findMany({
+        where: {
+            picks: {
+                some: {
+                    fight: {
+                        event: {
+                            date: {
+                                gte: startDate,
+                                lt: endDate,
+                            },
+                        },
+                    },
+                },
+            },
+        },
         select: {
             id: true,
             username: true,
@@ -129,6 +183,7 @@ export async function getYearlyLeaderboard(year: number) {
             };
         })
         .sort((a, b) => b.points - a.points)
+        .slice(0, 50)
         .map((user, index) => ({
             ...user,
             rank: index + 1,

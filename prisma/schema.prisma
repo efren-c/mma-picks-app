@@ -57,6 +57,7 @@ model UserEventResult {
   createdAt    DateTime @default(now())
 
   @@unique([userId, eventId])
+  @@index([userId, seen])
 }
 
 model Fight {

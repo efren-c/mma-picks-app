@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma"
 import { EventCard } from "@/components/EventCard"
 import { getDictionary } from "@/lib/i18n"
-import { formatInTimeZone } from 'date-fns-tz'
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
 
 import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 interface HomeProps {
     searchParams: Promise<{
@@ -20,36 +20,38 @@ export default async function Home({ searchParams }: HomeProps) {
   const pageSize = 6
 
   const dict = await getDictionary()
-  const events = await prisma.event.findMany({
-    orderBy: { date: 'asc' },
-    where: {
-      date: {
-        gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) // Show events from last year onwards for demo
-      }
-    }
-  })
 
-  // Filter events into today, upcoming, and past
-  // Using string comparison of the localized date to strictly avoid server-side timezone offset bugs
   const timeZone = 'America/Mexico_City'
   const now = new Date()
   const todayStr = formatInTimeZone(now, timeZone, 'yyyy-MM-dd')
+  const todayStart = fromZonedTime(`${todayStr}T00:00:00`, timeZone)
+  const todayEnd = fromZonedTime(`${todayStr}T23:59:59.999`, timeZone)
 
-  const todaysEvents = events.filter(event => {
-    return formatInTimeZone(event.date, timeZone, 'yyyy-MM-dd') === todayStr
-  })
+  // Fetch upcoming and today's events, and count/paginate past events concurrently
+  const [activeAndUpcomingEvents, totalPastEvents, paginatedPastEvents] = await Promise.all([
+    prisma.event.findMany({
+      where: { date: { gte: todayStart } },
+      orderBy: { date: 'asc' },
+    }),
+    prisma.event.count({
+      where: { date: { lt: todayStart } },
+    }),
+    prisma.event.findMany({
+      where: { date: { lt: todayStart } },
+      orderBy: { date: 'desc' },
+      skip: (currentPage - 1) * pageSize,
+      take: pageSize,
+    }),
+  ])
 
-  const upcomingEvents = events.filter(event => {
-    return formatInTimeZone(event.date, timeZone, 'yyyy-MM-dd') > todayStr
-  })
+  const todaysEvents = activeAndUpcomingEvents.filter(
+    (event) => event.date <= todayEnd
+  )
+  const upcomingEvents = activeAndUpcomingEvents.filter(
+    (event) => event.date > todayEnd
+  )
 
-  const pastEvents = events.filter(event => {
-    return formatInTimeZone(event.date, timeZone, 'yyyy-MM-dd') < todayStr
-  }).reverse()
-
-  const totalPastEvents = pastEvents.length
   const totalPages = Math.ceil(totalPastEvents / pageSize)
-  const paginatedPastEvents = pastEvents.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
     <main className="min-h-screen bg-slate-950 p-4 sm:p-8">
@@ -116,7 +118,7 @@ export default async function Home({ searchParams }: HomeProps) {
         </section>
 
         {/* Past Events Section */}
-        {pastEvents.length > 0 && (
+        {totalPastEvents > 0 && (
           <section>
             <h2 className="text-2xl font-semibold text-slate-400 mb-6 flex items-center">
               <span className="bg-slate-600 w-1 h-8 mr-3 rounded-full"></span>

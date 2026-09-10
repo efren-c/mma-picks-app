@@ -1,26 +1,18 @@
 import Link from "next/link"
-import { auth, signOut } from "@/auth"
+import { getCachedSession, signOut } from "@/auth"
 import { Button } from "@/components/ui/button"
-import { prisma } from "@/lib/prisma"
 import { getDictionary, getLocale } from "@/lib/i18n"
 import { LanguageSelector } from "./LanguageSelector"
 
 export async function Navbar() {
-    const session = await auth()
+    const session = await getCachedSession()
     const locale = await getLocale()
     const dict = await getDictionary(locale)
 
-    // Check if user is admin and fetch username
-    let isAdmin = false
-    let username = session?.user?.email // fallback to email
-    if (session?.user?.email) {
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-            select: { role: true, username: true }
-        })
-        isAdmin = user?.role === 'ADMIN'
-        username = user?.username || session.user.email
-    }
+    // Read admin status and username directly from session without DB queries
+    const isAdmin = session?.user?.role === 'ADMIN'
+    const username = session?.user?.username || session?.user?.email
+
 
     return (
         <nav className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
