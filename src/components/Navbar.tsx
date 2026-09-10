@@ -9,10 +9,9 @@ export async function Navbar() {
     const locale = await getLocale()
     const dict = await getDictionary(locale)
 
-    // Read admin status and username directly from session without DB queries
-    const isAdmin = session?.user?.role === 'ADMIN'
+    // Read admin/scorekeeper status and username directly from session without DB queries
+    const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SCOREKEEPER'
     const username = session?.user?.username || session?.user?.email
-
 
     return (
         <nav className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">

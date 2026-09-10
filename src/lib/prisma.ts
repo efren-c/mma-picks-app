@@ -10,8 +10,8 @@ export const prisma = prismaClient.$extends({
             async $allOperations({ operation, model, args, query }) {
                 const start = performance.now()
 
-                // Default timeout: 5000ms
-                const timeout = 5000
+                // Default timeout: 20000ms (accommodates serverless cold starts)
+                const timeout = 20000
 
                 try {
                     // Race between query and timeout
