@@ -1,15 +1,14 @@
-import { auth } from "@/auth"
+import { getCachedSession } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Trophy, History, Check, X, LockKeyhole, HandFist, Medal } from "lucide-react"
 import { DashboardEventCard } from "@/components/DashboardEventCard"
 import { Badge } from "@/components/Badge"
-import { getGlobalLeaderboard } from "@/app/lib/gamification-actions"
 import { getDictionary } from "@/lib/i18n"
 
 export default async function DashboardPage() {
-    const session = await auth()
+    const session = await getCachedSession()
     const dict = await getDictionary()
 
     if (!session?.user?.email) {
@@ -65,9 +64,12 @@ export default async function DashboardPage() {
         new Date(b.event.date).getTime() - new Date(a.event.date).getTime()
     )
 
-    const leaderboard = await getGlobalLeaderboard()
-    const userRank = leaderboard.find(u => u.id === user.id)?.rank
-    const rankDisplay = userRank ? `#${userRank}` : '>50'
+    // Calculate exact global rank with a single O(1) index count query
+    const higherRankedCount = await prisma.user.count({
+        where: { points: { gt: user.points } }
+    })
+    const userRank = higherRankedCount + 1
+    const rankDisplay = `#${userRank}`
 
     return (
         <main className="min-h-screen bg-slate-950 p-4 sm:p-8">

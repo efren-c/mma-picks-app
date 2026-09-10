@@ -173,3 +173,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
         },
     },
 });
+
+import { cache } from "react";
+export const getCachedSession = cache(async () => auth());
+

@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Trophy, Clock, Lock } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { motion } from "framer-motion"
 import { isToday, isTomorrow } from "date-fns"
 import { ClientDate } from "@/components/ClientDate"
@@ -129,10 +130,12 @@ export function EventCard({ id, name, date, image, slug, labels }: EventCardProp
                 <Card className={`overflow-hidden transition-colors cursor-pointer h-full flex flex-col border-slate-800 ${getBorderColor()}`}>
                     <div className="relative h-60 w-full bg-slate-800">
                         {image ? (
-                            <img
+                            <Image
                                 src={image}
                                 alt={name}
-                                className={`w-full h-full object-cover transition-opacity ${status === 'PAST' ? 'opacity-50 grayscale' : 'opacity-80 hover:opacity-100'}`}
+                                fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                className={`object-cover transition-opacity ${status === 'PAST' ? 'opacity-50 grayscale' : 'opacity-80 hover:opacity-100'}`}
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-600">
