@@ -18,7 +18,7 @@ export async function Navbar() {
             where: { email: session.user.email },
             select: { role: true, username: true }
         })
-        isAdmin = user?.role === 'ADMIN'
+        isAdmin = user?.role === 'ADMIN' || user?.role === 'SCOREKEEPER'
         username = user?.username || session.user.email
     }
 
