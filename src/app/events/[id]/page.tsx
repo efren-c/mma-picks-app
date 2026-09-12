@@ -47,7 +47,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 picks: {
                     where: {
                         fight: {
-                            eventId: id
+                            eventId: event.id
                         }
                     },
                     include: {
