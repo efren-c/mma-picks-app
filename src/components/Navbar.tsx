@@ -40,6 +40,11 @@ export async function Navbar() {
                                         {dict.navbar.dashboard}
                                     </Button>
                                 </Link>
+                                <Link href="/analytics">
+                                    <Button variant="ghost" size="sm" className="text-slate-200 hover:text-white font-medium">
+                                        {dict.navbar.analytics}
+                                    </Button>
+                                </Link>
                                 {isAdmin && (
                                     <Link href="/admin">
                                         <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 font-medium">
@@ -94,6 +99,11 @@ export async function Navbar() {
                                 <Link href="/dashboard">
                                     <Button variant="ghost" size="sm" className="text-slate-200 hover:text-white font-medium text-xs px-2">
                                         {dict.navbar.dashboard}
+                                    </Button>
+                                </Link>
+                                <Link href="/analytics">
+                                    <Button variant="ghost" size="sm" className="text-slate-200 hover:text-white font-medium text-xs px-2">
+                                        {dict.navbar.analytics}
                                     </Button>
                                 </Link>
                                 <Link href="/leaderboard">
