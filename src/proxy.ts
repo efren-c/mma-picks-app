@@ -11,13 +11,18 @@ export default auth((req) => {
     const nonce = Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString('base64');
 
     // Allow 'self', nonce, and critical Next.js domains/schemes
-    // We also likely need 'unsafe-inline' for styles in Next.js dev mode/some css-in-js, 
-    // but let's try strict first with nonce for scripts.
-    // For style-src, Next.js often requires 'unsafe-inline' unfortunately due to how it injects styles.
-    // We will start with a robust policy.
+    // In development mode, allow 'unsafe-eval' for React devtools/sourcemaps and WebSocket connections for HMR.
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    const scriptSrc = isDev
+        ? `'self' 'unsafe-eval' 'unsafe-inline'`
+        : `'self' 'nonce-${nonce}' 'strict-dynamic'`;
+
+    const connectSrc = isDev ? "connect-src 'self' ws: wss:;" : "";
+
     const cspHeader = `
         default-src 'self';
-        script-src 'self' 'nonce-${nonce}' 'strict-dynamic';
+        script-src ${scriptSrc};
         style-src 'self' 'unsafe-inline';
         img-src 'self' blob: data: https:;
         font-src 'self';
@@ -25,8 +30,9 @@ export default auth((req) => {
         base-uri 'self';
         form-action 'self';
         frame-ancestors 'none';
-        block-all-mixed-content;
-        upgrade-insecure-requests;
+        ${connectSrc}
+        ${isDev ? '' : 'block-all-mixed-content;'}
+        ${isDev ? '' : 'upgrade-insecure-requests;'}
     `.replace(/\s{2,}/g, ' ').trim();
 
     // Prevent clickjacking
