@@ -2,6 +2,7 @@ export const es = {
     navbar: {
         dashboard: "Historial",
         analytics: "Analítica",
+        notifications: "Notificaciones",
         leaderboard: "Tabla de clasificación",
         adminPanel: "Admin",
         signOut: "Cerrar sesión",
@@ -194,6 +195,46 @@ export const es = {
             title: "Sin Picks Concluidas Aún",
             desc: "Haz tus pronósticos en los próximos eventos. ¡Cuando las peleas terminen, tu analítica detallada aparecerá aquí!",
             cta: "Ver Próximos Eventos",
+        },
+    },
+    notifications: {
+        title: "Notificaciones",
+        markAllAsRead: "Marcar todas como leídas",
+        noNotifications: "Sin notificaciones aún",
+        noNotificationsDesc: "¡Estás al día! Las novedades sobre carteleras y cambios aparecerán aquí.",
+        emailOptIn: {
+            bannerText: "¿Quieres recibirlas en tu correo?",
+            enable: "Activar Alertas por Correo",
+            disable: "Desactivar",
+            active: "Alertas por correo activas",
+            loading: "Actualizando...",
+        },
+        types: {
+            eventCreated: {
+                badge: "Nuevo Evento",
+                title: "Nuevo Evento: {eventName}",
+                message: "¡Peleas disponibles para {eventName} ({eventDate})! Revisa las {fightCount} peleas confirmadas y ¡haz tus picks!",
+            },
+            cardFinalized: {
+                badge: "Cartelera Completa",
+                title: "Todas las Peleas Listas: {eventName}",
+                message: "¡Las {totalFights} peleas ya están listas y las selecciones están abiertas! Asegura tus picks antes de que inicie el evento.",
+            },
+            cardUpdated: {
+                badge: "Cambio en Cartelera",
+                title: "Cambio en la Cartelera: {eventName}",
+                message: "Actualización para {eventName}: {note} ¡Revisa tu selección!",
+                defaultNote: "Combate modificado: {fighterA} vs. {fighterB}.",
+            },
+        },
+        admin: {
+            announceEvent: "Anunciar Evento",
+            announceEventConfirm: "¿Anunciar este evento a todos los usuarios? Esto enviará una notificación en la app (y correo a quienes lo hayan activado).",
+            finalizeCard: "Marcar Cartelera Completa",
+            finalizeCardConfirm: "¿Marcar esta cartelera como completa? Notificará a los usuarios que todas las peleas están listas.",
+            notifyChange: "Notificar a los usuarios sobre este cambio",
+            notifyNoteLabel: "Motivo / Nota (opcional)",
+            notifyNotePlaceholder: "ej. Dan Ige entra con aviso corto tras la baja de Brian Ortega",
         },
     }
 } as const;

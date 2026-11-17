@@ -2,6 +2,7 @@ export const en = {
     navbar: {
         dashboard: "Dashboard",
         analytics: "Analytics",
+        notifications: "Notifications",
         leaderboard: "Leaderboard",
         adminPanel: "Admin",
         signOut: "Sign Out",
@@ -194,6 +195,46 @@ export const en = {
             title: "No Completed Picks Yet",
             desc: "Make predictions on upcoming fight cards. Once fights conclude, your detailed analytics and historical trends will appear here!",
             cta: "View Upcoming Events",
+        },
+    },
+    notifications: {
+        title: "Notifications",
+        markAllAsRead: "Mark all as read",
+        noNotifications: "No notifications yet",
+        noNotificationsDesc: "You're all caught up! Updates about upcoming cards and changes will appear here.",
+        emailOptIn: {
+            bannerText: "Want these in your email?",
+            enable: "Enable Email Alerts",
+            disable: "Disable",
+            active: "Email alerts active",
+            loading: "Updating...",
+        },
+        types: {
+            eventCreated: {
+                badge: "New Event",
+                title: "New Event: {eventName}",
+                message: "Fights are now available for {eventName} ({eventDate}). Check out the {fightCount} fights and start making your picks!",
+            },
+            cardFinalized: {
+                badge: "Card Finalized",
+                title: "All Fights Uploaded: {eventName}",
+                message: "All {totalFights} fights have been uploaded and picks are fully open! Lock in your picks before the event starts.",
+            },
+            cardUpdated: {
+                badge: "Card Update",
+                title: "Card Update: {eventName}",
+                message: "Update for {eventName}: {note} Please review your pick!",
+                defaultNote: "Matchup updated: {fighterA} vs. {fighterB}.",
+            },
+        },
+        admin: {
+            announceEvent: "Announce Event",
+            announceEventConfirm: "Announce this event to all users? This will send an in-app notification (and email to opted-in users).",
+            finalizeCard: "Mark Card Finalized",
+            finalizeCardConfirm: "Mark this card as finalized? This will notify all users that all fights are ready for picks.",
+            notifyChange: "Notify users of this card change",
+            notifyNoteLabel: "Reason / Note (optional)",
+            notifyNotePlaceholder: "e.g. Dan Ige steps in on short notice after Brian Ortega withdrew",
         },
     }
 } as const;
