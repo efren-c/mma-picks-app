@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { after } from 'next/server'
 import { EventSchema, FightSchema, ResultSchema } from '@/lib/validation-schemas'
-import { fromZonedTime } from 'date-fns-tz'
+import { fromZonedTime, toZonedTime, format } from 'date-fns-tz'
 
 async function requireAdmin() {
     const session = await auth()
@@ -214,6 +214,8 @@ export async function updateFight(
 
     const { fighterA, fighterB } = validatedFields.data
     const scheduledRounds = parseInt(formData.get('scheduledRounds') as string) || 3
+    const notifyUsers = formData.get('notifyUsers') === 'on' || formData.get('notifyUsers') === 'true'
+    const notificationNote = (formData.get('notificationNote') as string)?.trim() || ''
 
     try {
         await prisma.fight.update({
@@ -225,11 +227,100 @@ export async function updateFight(
             },
         })
 
+        if (notifyUsers) {
+            const event = await prisma.event.findUnique({
+                where: { id: eventId },
+                select: { id: true, name: true, slug: true },
+            })
+            if (event) {
+                const { broadcastNotification } = await import('@/lib/notifications')
+                await broadcastNotification({
+                    type: 'CARD_UPDATED',
+                    data: {
+                        eventId: event.id,
+                        eventName: event.name,
+                        fighterA,
+                        fighterB,
+                        note: notificationNote,
+                    },
+                    link: `/events/${eventId}`,
+                })
+            }
+        }
+
         revalidatePath(`/admin/events/${eventId}`)
         return { message: 'Fight updated successfully' }
     } catch (error) {
         return { message: 'Failed to update fight' }
     }
+}
+
+export async function announceEvent(eventId: string) {
+    await requireAdmin()
+
+    const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        include: { fights: true },
+    })
+
+    if (!event) {
+        return { success: false, message: 'Event not found' }
+    }
+
+    if (event.fights.length === 0) {
+        return { success: false, message: 'Please add at least one fight before announcing the event.' }
+    }
+
+    const { broadcastNotification } = await import('@/lib/notifications')
+    const formattedDate = format(toZonedTime(event.date, 'America/Mexico_City'), 'EEE, MMM d')
+
+    await broadcastNotification({
+        type: 'EVENT_CREATED',
+        data: {
+            eventId: event.id,
+            eventName: event.name,
+            eventDate: formattedDate,
+            fightCount: event.fights.length,
+        },
+        link: `/events/${eventId}`,
+    })
+
+    revalidatePath('/admin')
+    revalidatePath(`/admin/events/${eventId}`)
+    return { success: true, message: 'Event announced to all users!' }
+}
+
+export async function finalizeEventCard(eventId: string) {
+    await requireAdmin()
+
+    const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        include: { fights: true },
+    })
+
+    if (!event) {
+        return { success: false, message: 'Event not found' }
+    }
+
+    if (event.fights.length === 0) {
+        return { success: false, message: 'No fights found on this card.' }
+    }
+
+    const { broadcastNotification } = await import('@/lib/notifications')
+
+    await broadcastNotification({
+        type: 'CARD_FINALIZED',
+        data: {
+            eventId: event.id,
+            eventName: event.name,
+            totalFights: event.fights.length,
+        },
+        link: `/events/${eventId}`,
+    })
+
+    revalidatePath('/admin')
+    revalidatePath(`/admin/events/${eventId}`)
+    return { success: true, message: 'Card finalized and notification sent!' }
 }
 
 

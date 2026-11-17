@@ -16,10 +16,6 @@ export async function sendPasswordResetEmail({
   const resetLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
 
   try {
-    // TODO: PRODUCTION SETUP - Update 'from' email after verifying your domain in Resend
-    // Current: onboarding@resend.dev (works for testing, limited to verified emails)
-    // Production: 'MMA Picks <noreply@yourdomain.com>' (requires domain verification)
-    // Add email rate limiting
     const { data, error } = await resend.emails.send({
       from: 'MMA Picks <noreply@picks-mma.com>',
       to: [to],
@@ -70,7 +66,7 @@ function getPasswordResetEmailHTML(username: string, resetLink: string): string 
               </p>
               
               <p style="margin: 0 0 20px; color: #cbd5e1; font-size: 16px; line-height: 1.6;">
-                We received a request to reset your password for your MMA Picks account. Click the button below to create a new password:
+                We received a request to reset your password. Click the button below to choose a new password:
               </p>
               
               <!-- Button -->
@@ -93,12 +89,8 @@ function getPasswordResetEmailHTML(username: string, resetLink: string): string 
                 ${resetLink}
               </p>
               
-              <p style="margin: 20px 0 0; color: #94a3b8; font-size: 14px; line-height: 1.6;">
-                <strong>This link will expire in 1 hour.</strong>
-              </p>
-              
-              <p style="margin: 20px 0 0; color: #94a3b8; font-size: 14px; line-height: 1.6;">
-                If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.
+              <p style="margin: 30px 0 0; color: #94a3b8; font-size: 14px; line-height: 1.6; border-top: 1px solid #334155; padding-top: 20px;">
+                This link will expire in 1 hour. If you didn't request this password reset, you can safely ignore this email.
               </p>
             </td>
           </tr>
@@ -224,4 +216,114 @@ function getVerificationEmailHTML(username: string, verifyLink: string): string 
   </body>
   </html>
     `.trim();
+}
+
+interface SendNotificationEmailParams {
+  to: string;
+  username: string;
+  subject: string;
+  title: string;
+  message: string;
+  ctaLink: string;
+}
+
+export async function sendNotificationEmail({
+  to,
+  username,
+  subject,
+  title,
+  message,
+  ctaLink,
+}: SendNotificationEmailParams) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'MMA Picks <noreply@picks-mma.com>',
+      to: [to],
+      subject,
+      html: getNotificationEmailHTML(username, title, message, ctaLink),
+    });
+
+    if (error) {
+      console.error('Resend notification error:', error);
+      return { success: false, error };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Failed to send notification email:', error);
+    return { success: false, error };
+  }
+}
+
+function getNotificationEmailHTML(
+  username: string,
+  title: string,
+  message: string,
+  ctaLink: string
+): string {
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+  </head>
+  <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0f172a;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td align="center" style="padding: 40px 0;">
+          <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155;">
+            <!-- Header -->
+            <tr>
+              <td style="padding: 30px 40px; text-align: center; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">
+                <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 800; letter-spacing: 0.5px;">MMA PICKS</h1>
+              </td>
+            </tr>
+            
+            <!-- Content -->
+            <tr>
+              <td style="padding: 36px 40px;">
+                <h2 style="margin: 0 0 16px; color: #f1f5f9; font-size: 22px; font-weight: 700;">${title}</h2>
+                
+                <p style="margin: 0 0 18px; color: #cbd5e1; font-size: 15px; line-height: 1.6;">
+                  Hi <strong style="color: #f1f5f9;">${username}</strong>,
+                </p>
+                
+                <p style="margin: 0 0 24px; color: #cbd5e1; font-size: 15px; line-height: 1.6;">
+                  ${message}
+                </p>
+                
+                <!-- CTA Button -->
+                <table role="presentation" style="margin: 28px 0 20px;">
+                  <tr>
+                    <td style="border-radius: 6px; background-color: #dc2626;">
+                      <a href="${ctaLink}" 
+                         style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; border-radius: 6px; letter-spacing: 0.3px;">
+                        Make Your Picks
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            
+            <!-- Footer -->
+            <tr>
+              <td style="padding: 24px 40px; background-color: #0f172a; border-top: 1px solid #334155;">
+                <p style="margin: 0 0 8px; color: #64748b; font-size: 12px; line-height: 1.5; text-align: center;">
+                  You received this email because you opted into fight card updates on MMA Picks.
+                </p>
+                <p style="margin: 0; color: #475569; font-size: 11px; text-align: center;">
+                  You can disable email updates anytime in your in-app notification settings.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+  </html>
+  `.trim();
 }

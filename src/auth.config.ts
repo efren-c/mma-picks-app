@@ -19,8 +19,11 @@ export const authConfig = {
             return token
         },
         async session({ session, token }) {
-            // Add username and role to the session from the token
+            // Add id, username and role to the session from the token
             if (session.user) {
+                if (token.sub) {
+                    session.user.id = token.sub
+                }
                 session.user.username = token.username as string
                 session.user.role = token.role as string
             }

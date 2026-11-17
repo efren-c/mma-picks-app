@@ -3,6 +3,8 @@ import { getCachedSession, signOut } from "@/auth"
 import { Button } from "@/components/ui/button"
 import { getDictionary, getLocale } from "@/lib/i18n"
 import { LanguageSelector } from "./LanguageSelector"
+import { getUserNotifications, getUnreadNotificationCount, getUserEmailPreference } from "@/lib/notifications"
+import { NotificationBell } from "./notifications/NotificationBell"
 
 export async function Navbar() {
     const session = await getCachedSession()
@@ -12,6 +14,24 @@ export async function Navbar() {
     // Read admin/scorekeeper status and username directly from session without DB queries
     const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SCOREKEEPER'
     const username = session?.user?.username || session?.user?.email
+
+    let userId = session?.user?.id
+    if (!userId && session?.user?.email) {
+        const { prisma } = await import('@/lib/prisma')
+        const dbUser = await prisma.user.findUnique({
+            where: { email: session.user.email },
+            select: { id: true },
+        })
+        userId = dbUser?.id
+    }
+
+    const [notifications, unreadCount, notifyEmail] = userId
+        ? await Promise.all([
+            getUserNotifications(userId),
+            getUnreadNotificationCount(userId),
+            getUserEmailPreference(userId),
+        ])
+        : [[], 0, false]
 
     return (
         <nav className="border-b border-slate-800 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
@@ -78,6 +98,15 @@ export async function Navbar() {
                                 </Link>
                             </div>
                         )}
+                        {userId && (
+                            <NotificationBell
+                                userId={userId}
+                                initialNotifications={notifications}
+                                initialUnreadCount={unreadCount}
+                                initialNotifyEmail={notifyEmail}
+                                dict={dict.notifications}
+                            />
+                        )}
                         <LanguageSelector currentLocale={locale} />
                     </div>
                 </div>
@@ -89,7 +118,18 @@ export async function Navbar() {
                         <Link href="/" className="text-xl font-bold text-white">
                             MMA <span className="text-red-600">Picks</span>
                         </Link>
-                        <LanguageSelector currentLocale={locale} />
+                        <div className="flex items-center gap-2">
+                            {userId && (
+                                <NotificationBell
+                                    userId={userId}
+                                    initialNotifications={notifications}
+                                    initialUnreadCount={unreadCount}
+                                    initialNotifyEmail={notifyEmail}
+                                    dict={dict.notifications}
+                                />
+                            )}
+                            <LanguageSelector currentLocale={locale} />
+                        </div>
                     </div>
 
                     {/* Row 2: nav links */}

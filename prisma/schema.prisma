@@ -26,9 +26,11 @@ model User {
   resetTokenExpiry DateTime?
   lastPasswordChange DateTime?
   tokenVersion  Int      @default(0)
+  notifyEmail   Boolean  @default(false)
   picks     Pick[]
   badges    UserBadge[]
   eventResults UserEventResult[]
+  notificationReads NotificationRead[]
 }
 
 model Event {
@@ -111,4 +113,27 @@ model UserBadge {
   awardedAt DateTime @default(now())
 
   @@unique([userId, badgeId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // "EVENT_CREATED" | "CARD_FINALIZED" | "CARD_UPDATED"
+  data      String   // JSON payload (eventName, eventDate, fightCount, note, etc.)
+  link      String   // e.g. "/events/ufc-312"
+  createdAt DateTime @default(now())
+  reads     NotificationRead[]
+
+  @@index([createdAt])
+}
+
+model NotificationRead {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  readAt         DateTime     @default(now())
+
+  @@unique([userId, notificationId])
+  @@index([userId])
 }

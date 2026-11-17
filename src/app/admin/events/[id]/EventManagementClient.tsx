@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useEffect } from "react"
 import { useFormStatus } from "react-dom"
-import { createFight, updateFightResult, deleteFight, updateEvent, deleteEvent, updateFight, reorderFight } from "@/app/lib/admin-actions"
+import { createFight, updateFightResult, deleteFight, updateEvent, deleteEvent, updateFight, reorderFight, announceEvent, finalizeEventCard } from "@/app/lib/admin-actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowUp, ArrowDown } from "lucide-react"
@@ -274,6 +274,7 @@ function EditEventForm({ event, onCancel }: { event: Event; onCancel: () => void
 }
 
 function EditFightForm({ fight, eventId, onCancel }: { fight: Fight; eventId: string; onCancel: () => void }) {
+    const [notifyUsers, setNotifyUsers] = useState(false)
     const [state, dispatch] = useActionState(
         updateFight.bind(null, fight.id, eventId),
         undefined
@@ -323,6 +324,31 @@ function EditFightForm({ fight, eventId, onCancel }: { fight: Fight; eventId: st
                 </div>
             </div>
 
+            <div className="space-y-2 pt-2 border-t border-slate-800">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
+                    <input
+                        type="checkbox"
+                        name="notifyUsers"
+                        checked={notifyUsers}
+                        onChange={(e) => setNotifyUsers(e.target.checked)}
+                        className="rounded bg-slate-800 border-slate-700 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
+                    />
+                    <span>Notify users of this card change</span>
+                </label>
+
+                {notifyUsers && (
+                    <div className="space-y-1 pl-6">
+                        <label className="text-xs text-slate-400">Reason / Note (optional)</label>
+                        <input
+                            type="text"
+                            name="notificationNote"
+                            placeholder="e.g. Dan Ige steps in on short notice after Brian Ortega withdrew"
+                            className="w-full p-2 text-sm rounded-md bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-red-600"
+                        />
+                    </div>
+                )}
+            </div>
+
             {state?.message && (
                 <div className={state.message.includes('success') ? 'text-green-500 text-sm' : 'text-red-500 text-sm'}>
                     {state.message}
@@ -345,7 +371,47 @@ export default function EventManagementClient({ event, userRole }: Props) {
     const isScorekeeper = userRole === 'SCOREKEEPER'
     const [isEditingEvent, setIsEditingEvent] = useState(false)
     const [editingFightId, setEditingFightId] = useState<string | null>(null)
+    const [isAnnouncing, setIsAnnouncing] = useState(false)
+    const [isFinalizing, setIsFinalizing] = useState(false)
     const router = useRouter()
+
+    const handleAnnounceEvent = async () => {
+        if (event.fights.length === 0) {
+            alert('Please add at least one fight to the card before announcing.')
+            return
+        }
+        if (confirm(`Announce "${event.name}" to all users? This will send an in-app notification (and emails to opted-in users).`)) {
+            setIsAnnouncing(true)
+            try {
+                const res = await announceEvent(event.id)
+                alert(res.message)
+                router.refresh()
+            } catch (error) {
+                alert('Failed to announce event')
+            } finally {
+                setIsAnnouncing(false)
+            }
+        }
+    }
+
+    const handleFinalizeCard = async () => {
+        if (event.fights.length === 0) {
+            alert('No fights found on this card.')
+            return
+        }
+        if (confirm(`Mark "${event.name}" as finalized? This will notify all users that all fights are ready for picks.`)) {
+            setIsFinalizing(true)
+            try {
+                const res = await finalizeEventCard(event.id)
+                alert(res.message)
+                router.refresh()
+            } catch (error) {
+                alert('Failed to finalize card')
+            } finally {
+                setIsFinalizing(false)
+            }
+        }
+    }
 
     const handleDeleteEvent = async () => {
         console.log('Delete button clicked!')
@@ -432,6 +498,29 @@ export default function EventManagementClient({ event, userRole }: Props) {
                                         <div>
                                             <p className="text-sm text-slate-400">Image</p>
                                             <img src={event.image} alt={event.name} className="mt-2 rounded-md max-w-full h-auto" />
+                                        </div>
+                                    )}
+
+                                    {!isScorekeeper && (
+                                        <div className="pt-3 border-t border-slate-800 flex flex-wrap gap-2">
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                disabled={isAnnouncing}
+                                                onClick={handleAnnounceEvent}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                                            >
+                                                {isAnnouncing ? 'Announcing...' : 'Announce Event'}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                disabled={isFinalizing}
+                                                onClick={handleFinalizeCard}
+                                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+                                            >
+                                                {isFinalizing ? 'Finalizing...' : 'Mark Card Finalized'}
+                                            </Button>
                                         </div>
                                     )}
                                 </>
